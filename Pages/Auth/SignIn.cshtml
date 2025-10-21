@@ -1,0 +1,51 @@
+﻿@page
+@model QuizCarLicense.Pages.Auth.SignInModel
+@{
+}
+
+@{
+    ViewData["Title"] = "SignIn page";
+
+    // Common classes for repeated elements
+    string containerCss = "w-full rounded-lg bg-white shadow dark:border dark:bg-gray-800 dark:border-gray-700 sm:max-w-md md:mt-0 xl:p-0";
+    string formContainerCss = "space-y-4 p-6 sm:p-8 md:space-y-6";
+    string inputCss = "block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:ring-primary-600 focus:border-primary-600 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500";
+    string labelCss = "mb-2 block text-sm font-medium text-gray-900 dark:text-white";
+}
+<style>
+    .contain {
+        height: 80vh !important;
+    }
+
+</style>
+<div class="contain flex items-center justify-evenly">
+    <div class="@containerCss">
+        <div class="@formContainerCss">
+            <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white md:text-2xl">
+                Create Account
+            </h1>
+            <form class="space-y-4 md:space-y-6" method="post"
+                  asp-page-handler="SignUp">
+                <div>
+                    <label for="UserName" class="@labelCss">Username</label>
+                    <input type="text" name="UserName" id="email" class="@inputCss" placeholder="name" required="">
+                </div>
+                <div>
+                    <label for="FullName" class="@labelCss">FullName</label>
+                    <input type="text" name="FullName" id="email" class="@inputCss" placeholder="Fullname" required="">
+                </div>
+                <div>
+                    <label for="password" class="@labelCss">Password</label>
+                    <input type="password" name="password" id="password" placeholder="••••••••" class="@inputCss" required="">
+                </div>
+                <div>
+                    <label for="repassword" class="@labelCss">Re-Password</label>
+                    <input type="password" name="repassword" id="repassword" placeholder="••••••••" class="@inputCss" required="">
+                </div>
+                <div class="text-sm text-red-400">@Model.Message</div>
+                <input type="submit" class="text-black" value="Sign up" name="signup" />
+            </form>
+        </div>
+    </div>
+</div>
+

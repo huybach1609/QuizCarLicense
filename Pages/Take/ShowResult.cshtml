@@ -1,0 +1,238 @@
+﻿@page
+@using QuizCarLicense.Constrains
+@using QuizCarLicense.DTO
+@using QuizCarLicense.Constrains
+@model QuizCarLicense.Pages.Take.ShowResultModel
+@{
+    string btncss = "py-2.5 px-5  text-left text-sm font-medium text-blue-900 focus:outline-none bg-white rounded-lg border border-gray-200 ";
+    string containerBtn = "m-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800";
+    string btnMaterial = "rounded-full border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none";
+    string btnDelete = "rounded-full border border-red-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-red-600 hover:text-white hover:bg-slate-800 hover:border-red-800 focus:text-white focus:bg-red-800 focus:border-red-800 active:border-red-800 active:text-white active:bg-red-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none";
+    var listQuestion = Model.TestQuestion;
+}
+<style>
+    html {
+    }
+
+    .selected {
+        background-color: #818cf8;
+        color: #1e1b4b;
+    }
+
+        .selected:hover {
+            background-color: #1e1b4b !important;
+            color: #818cf8 !important;
+        }
+
+    .rightAns {
+        background-color: #bbf7d0;
+        color: #14532d;
+    }
+
+    .wrongAns {
+        background-color: #fee2e2;
+        color: #7f1d1d;
+    }
+
+    .notFinishAns {
+        color: #44403c;
+        background-color: #e7e5e4;
+    }
+
+
+    .answer-btn {
+        display: block;
+        margin: 10px 0;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .question-container {
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    #questions-container {
+        width: 70vw;
+    }
+
+    @@media(max-width: 800px) {
+        #questions-container {
+            width: 100vw;
+        }
+    }
+
+    .co {
+        height: 76vh;
+    }
+
+        .co::-webkit-scrollbar {
+            display: none; /* Hides the scrollbar for WebKit browsers */
+        }
+</style>
+
+<div class="flex">
+    <!-- Container for all questions -->
+    <div id="questions-container" class="co overflow-y-auto" style="scroll-behavior: smooth;">
+        @for (int i = 0; i < listQuestion.Count; i++)
+        {
+            QuestionDTO quesDTO = listQuestion[i];
+
+            <div class="question-block @containerBtn" id="question-@i">
+                <div class="flex justify-between font-semibold text-[#1e1b4b]">
+                    <span>@(i + 1). @listQuestion[i].Content</span>
+                    <span class="text-green-500">@(quesDTO.Status == QuestionStatus.TRUE ? "+1" : "")</span>
+                </div>
+                <div class="grid-cols-2 grid gap-3">
+                    @for (int j = 0; j < listQuestion[i].Answers.Count; j++)
+                    {
+                        if (!listQuestion[i].Answers[j].Content.Equals("none"))
+                        {
+                            AnswerDTO ansDTO = listQuestion[i].Answers[j];
+                            string rightAns = quesDTO.AnswerId == ansDTO.Id && quesDTO.Status == QuestionStatus.TRUE ? "rightAns" : "";
+                            string chooseAns = quesDTO.AnswerId == ansDTO.Id && quesDTO.Status == QuestionStatus.FALSE ? "wrongAns" : "";
+                            string rightAnsView = ansDTO.IsCorrect ? "text-green-600" : "";
+
+                            <button class="answer-btn @btncss @chooseAns @rightAns"
+                                    data-index="@i"
+                                    data-question="@listQuestion[i].Id"
+                                    data-answer-id="@listQuestion[i].Answers[j].Id" disabled>
+                                <div class="@rightAnsView">
+                                    @{
+                                        char letter = (char)(97 + j);
+                                        string letterAsString = letter.ToString();
+                                    }
+                                    @letterAsString. @listQuestion[i].Answers[j].Content
+
+                                </div>
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+    </div>
+    <div class="h-28 w-[300px] pt-10">
+        <div class="@containerBtn grid-cols-4 grid gap-3">
+            @for (int i = 0; i < listQuestion.Count; i++)
+            {
+                QuestionDTO quesDTO = listQuestion[i];
+                string rightAns = quesDTO.Status == QuestionStatus.TRUE ? "text-green-500 hover:bg-green-100" : "";
+                string chooseAns = quesDTO.Status == QuestionStatus.FALSE ? "text-red-500 hover:bg-red-100" : "";
+                string notfinish = quesDTO.Status == QuestionStatus.NOTFINISH ? "notFinishAns" : "";
+
+                <a id="link-@listQuestion[i].Id"
+                   class="flex h-8 w-8 items-center justify-center rounded-lg border
+border-gray-300 bg-white px-2 text-sm font-medium text-gray-500 @rightAns @chooseAns @notfinish"
+                   href="#question-@i">@(i + 1)</a>
+            }
+
+        </div>
+        <div class="@containerBtn">
+            <article class="flex max-w-xl flex-col items-start justify-between">
+                <div class="flex justify-between gap-x-4 text-xs">
+
+                    <time class="text-gray-500">
+                        <span>@Model.TakeObject.StartedAt.ToString("MMM dd, yyyy ")</span>
+                        <div>
+                            @Model.TakeObject.StartedAt.ToString("h:mm tt") - @Model.TakeObject.FinishedAt?.ToString("h:mm tt")
+                        </div>
+                    </time>
+
+                    <a class="z-10 relative rounded-full bg-gray-50 px-3 py-1.5 font-medium text-gray-600 hover:bg-gray-100">
+                        @Model.TakeObject.Score / @listQuestion.Count
+                    </a>
+                </div>
+                <div class="group relative">
+                    <h3 class="leading-6 group-hover:text-gray-600 mt-3 text-lg font-semibold text-gray-900">
+                        <a>
+                            <span class="absolute inset-0"></span>
+                            Quiz: @Model.TakeObject.Quiz.Title
+                        </a>
+                    </h3>
+                    <p class="line-clamp-3 leading-6 mt-5 text-sm text-gray-600">
+                        @Model.TakeObject.Quiz.Detail
+                    </p>
+                </div>
+
+                <div class="mt-5 text-sm font-semibold text-gray-900">Created by</div>
+                <div class="relative flex items-center gap-x-4">
+                    <img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-10 w-10 rounded-full bg-gray-50">
+                    <div class="leading-6 text-sm">
+                        <p class="font-semibold text-gray-900">
+                            <a>
+                                <span class="absolute inset-0"></span>
+                                Michael Foster
+                            </a>
+                        </p>
+                        @* <p class="text-gray-600">Co-Founder / CTO</p> *@
+                    </div>
+                </div>
+            </article>
+        </div>
+        <div class="flex justify-center gap-5">
+            <a href="/test?quizId=@Model.TakeObject.Quiz.QuizId"
+               class="@btnMaterial">Test again</a>
+            <a onclick="return confirm('you want to delete this result?')"
+               asp-page-handler="Delete" asp-route-id="@Model.TakeId"
+               class="@btnDelete">Delete Result</a>
+            <a onclick="return confirm('you want to print this result?')"
+               asp-page-handler="Print" asp-route-id="@Model.TakeId"
+               class="@btnDelete">Print Result</a>
+        </div>
+    </div>
+
+</div>
+<script>
+
+    // Array to store selected answers (by ID)
+    const selectedAnswers = [];
+
+    function loadAllQuestions() {
+        const questionsContainer = document.getElementById('questions-container');
+        const answerButtons = questionsContainer.querySelectorAll('.answer-btn');
+        const links = document.querySelectorAll('[id^="link-"]');
+
+
+
+        answerButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const questionId = this.getAttribute('data-question');
+                const answerId = this.getAttribute('data-answer-id');
+                const questionIndex = this.getAttribute('data-index');
+                console.log(questionIndex);
+
+                if (this.classList.contains('selected')) {
+                    this.classList.remove('selected');
+                    removeAnswerFromList(questionId, answerId);
+                    links[questionIndex].classList.remove('selected');
+                } else {
+                    this.classList.add('selected');
+                    links[questionIndex].classList.add('selected');
+                    addAnswerToList(questionId, answerId);
+                }
+            });
+        });
+    }
+
+    function addAnswerToList(questionId, answerId) {
+        const answer = { questionId: parseInt(questionId), answerId: parseInt(answerId) };
+        selectedAnswers.push(answer);
+        console.log('Answer added:', answer);
+    }
+
+    function removeAnswerFromList(questionId, answerId) {
+        const index = selectedAnswers.findIndex(
+            item => item.questionId === parseInt(questionId) && item.answerId === parseInt(answerId)
+        );
+        if (index !== -1) {
+            selectedAnswers.splice(index, 1);
+            console.log('Answer removed:', { questionId, answerId });
+        }
+    }
+    window.onload = loadAllQuestions;
+</script>

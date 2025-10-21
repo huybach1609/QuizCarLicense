@@ -1,0 +1,12 @@
+/*! @import */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --background0: #1a202c; /* Example dark color */
+    --foreground0: #ffffff; /* Example light text color */
+    --background1: #2d3748; /* Slightly lighter dark color */
+    --foreground1: #e2e8f0; /* Slightly lighter text color */
+}
+

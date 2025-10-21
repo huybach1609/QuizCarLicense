@@ -1,0 +1,113 @@
+﻿@page
+@model IndexModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "Home page";
+    var listTake = Model.ListTake;
+    List<string> randomColor = new() { "text-red-800", "text-blue-800", "text-green-800" };
+
+    string GetRandomColor()
+    {
+        int index = new Random().Next(randomColor.Count); // Generates a random index
+        return randomColor[index]; // Returns a random color from the list
+    }
+    bool isLogin = User?.Identity?.IsAuthenticated ?? false;
+}
+
+@if (isLogin)
+{
+    <div id="accordion-collapse" data-accordion="open" class="m-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+        <h1 class="mb-4 text-4xl font-bold leading-none tracking-tight text-gray-900">
+            <mark class="rounded bg-blue-600 px-2 text-white dark:bg-blue-500">Recently</mark> take exam
+        </h1>
+
+
+        @if (listTake.Count > 0)
+        {
+            @foreach (var quizGroup in listTake.GroupBy(take => take.QuizId))
+            {
+                int quizId = quizGroup.First().Quiz?.QuizId ?? 0;
+                int totalQuestion = quizGroup.First().Quiz?.Questions.Count ?? 0;
+                <h2 id="accordion-collapse-heading-@quizId">
+                    <button type="button" class="border-b-0 flex w-full items-center justify-between gap-3 border border-gray-200 p-5 font-medium text-gray-500 hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 rtl:text-right dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-800 dark:hover:bg-gray-800"
+                            data-accordion-target="#accordion-collapse-body-@quizId" aria-expanded="true" aria-controls="accordion-collapse-body-@quizId">
+                        <span>
+                            Quiz: @(quizGroup.First().Quiz?.Title ?? "No Title")
+                        </span>
+                        <svg data-accordion-icon class="shrink-0 h-3 w-3 rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5" />
+                        </svg>
+                    </button>
+                </h2>
+
+                <div id="accordion-collapse-body-@quizId" class="hidden" aria-labelledby="accordion-collapse-heading-@quizId">
+
+                    <div class="border-b-0 grid-cols-2 mb-6 grid gap-8 border border-gray-200 p-5 lg:grid-cols-3">
+                        @foreach (var take in quizGroup)
+                        {
+                            <div class="flex items-center justify-between rounded-lg bg-gray-50 shadow dark:bg-gray-800 dark:border-gray-700">
+                                <div scope="row" class="whitespace-nowrap px-6 py-4 font-thin text-gray-400 dark:text-white">
+                                    #@take.TakeId
+                                </div>
+                                <div class="radial-progress text-accent hidden lg:block"
+                                     style="--value:@(Convert.ToInt32((take.Score / (double)totalQuestion) * 100)); --size:3rem;"
+                                     role="progressbar">
+                                    <span class="text-sm font-medium">
+                                        @take.Score / @totalQuestion
+                                    </span>
+                                </div>
+                                <div class="px-6 py-4">
+                                    <div class="text-sm font-medium">
+                                        @take.StartedAt.ToString("MMM dd, yyyy")
+                                    </div>
+                                    <div>
+                                        <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            <span class="me-1 h-2 w-2 rounded-full bg-green-500"></span>
+                                            @take.StartedAt.ToString("h:mm tt")
+                                        </span>
+                                        <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">
+                                            <span class="me-1 h-2 w-2 rounded-full bg-red-500"></span>
+                                            @(take.FinishedAt?.ToString("h:mm tt") ?? "n/a")
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="px-6 py-4">
+                                    <a asp-page="/Take/ShowResult" asp-route-takeId="@take.TakeId"
+                                       class="font-medium text-blue-600 hover:underline dark:text-blue-500">details</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="flex justify-center my-4 text-gray-500">
+                have not taken any test yet
+            </div>
+
+        }
+    </div>
+}
+
+
+<div id="accordion-collapse" data-accordion="collapse" class="m-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+    <h1 class="mb-4 text-4xl font-bold leading-none tracking-tight text-gray-900">
+        Suggest <mark class="rounded bg-blue-600 px-2 text-white dark:bg-blue-500">quiz</mark> set
+    </h1>
+
+    <div class="border-b-0 grid-cols-2 mb-6 grid gap-8 border border-gray-200 p-5 lg:grid-cols-3">
+        @foreach (var card in Model.ListCard)
+        {
+            <a href="@card.Url"
+               class="flex flex-col items-center justify-center rounded-lg bg-gray-50 p-5 shadow @GetRandomColor() duration-200 ease-in hover:bg-black hover:text-white">
+                @Html.Raw(card.Icon)
+                <div class="pt-5 text-xl font-medium">
+                    @card.Title
+                </div>
+            </a>
+        }
+    </div>
+</div>
+

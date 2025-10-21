@@ -1,0 +1,46 @@
+﻿@page
+@model QuizCarLicense.Pages.Quiz.AddModel
+@{
+    string normalBtn = "ms-3 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:z-10 focus:ring-4 focus:ring-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:focus:ring-gray-700 dark:hover:text-white dark:hover:bg-gray-700k";
+    string submitBtn = "rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800k";
+    string checkboxBtn = "h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-blue-500 focus:ring-2 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600";
+}
+<div class="m-4 rounded-lg bg-white shadow dark:bg-gray-800">
+    <!-- Modal content -->
+    <form method="post" class="relative h-[100%] rounded-lg bg-white shadow dark:bg-gray-700">
+        <!-- Modal header -->
+        <div class="flex items-center justify-between rounded-t border-b p-4 dark:border-gray-600 md:p-5">
+            <h3 class="text-xl font-medium text-gray-900 dark:text-white">
+                Question bank
+            </h3>
+        </div>
+        <!-- Modal body -->
+        <div class="m-4 space-y-4">
+            <input type="hidden" value="@Model.Code" name="Code" />
+            <ul class="h-96 divide-y divide-gray-200 overflow-y-auto">
+                @foreach (var question in Model.ListQuestion)
+                {
+                    <li class="flex items-center">
+                        @{
+                            bool check = false;
+                            if (Model.SelectedQuestions != null)
+                            {
+                                check = Model.SelectedQuestions.Contains(question.QuestionId);
+                            }
+                        }
+                        <input id="@question.QuestionId" type="checkbox" value="@question.QuestionId" name="SelectedQuestions" class="@checkboxBtn" checked="@check">
+                        <label for="@question.QuestionId" class="ms-2 w-full py-4 text-sm font-medium text-gray-900 dark:text-gray-300">
+                            <span class="text-sm text-gray-500">#@question.QuestionId</span> @question.Content
+                        </label>
+                    </li>
+                }
+            </ul>
+        </div>
+        <!-- Modal footer -->
+        <div class="flex items-center space-x-3 rounded-b border-t border-gray-200 p-4 rtl:space-x-reverse md:p-5">
+            <button type="submit" class="@submitBtn">Submit</button>
+            <button type="button" class="@normalBtn">Cancel</button>
+        </div>
+    </form>
+</div>
+

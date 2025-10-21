@@ -1,0 +1,142 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using QuizCarLicense.DTO;
+using QuizCarLicense.Models;
+using System.Reflection.Metadata.Ecma335;
+
+namespace QuizCarLicense.Pages.Question
+{
+    public class IndexcshtmlModel : PageModel
+    {
+        [BindProperty]
+        public QuizQuestionInputModel QuestionInput { get; set; }
+
+        public List<QuizQuestion> ListQuestion { get; set; } = new();
+        public QuizQuestion QuestionStore { get; set; } = new();
+        public string Message { get; set; } = "";
+
+        public void OnGet()
+        {
+            LoadData();
+        }
+
+        private void LoadData()
+        {
+            using var context = new QuizCarLicenseContext();
+            ListQuestion = context.QuizQuestions.ToList();
+            QuestionInput = new QuizQuestionInputModel();
+            QuestionInput.QuizAnswers.Add(new QuizAnswerInputModel());
+            QuestionInput.QuizAnswers.Add(new QuizAnswerInputModel());
+            QuestionInput.QuizAnswers.Add(new QuizAnswerInputModel());
+            QuestionInput.QuizAnswers.Add(new QuizAnswerInputModel());
+        }
+        public IActionResult OnGetPreview(int id)
+        {
+            using var context = new QuizCarLicenseContext();
+            var questionKey = context.QuizQuestions.FirstOrDefault(q => q.QuestionId == id);
+            if (questionKey != null)
+            {
+                QuestionStore = questionKey;
+                QuestionStore.QuizAnswers = context.QuizAnswers.Where(a => a.QuestionId == id).ToList();
+            }
+            LoadData();
+            return Page();
+        }
+
+        public IActionResult OnPost()
+        {
+            if (!ModelState.IsValid)
+            {
+                LoadData();
+                Message = "ModelState is not valid.";
+                return Page();
+            }
+
+            if (Request.Form["insert"].Count > 0)
+            {
+                InsertQuestion();
+            }
+            else if (Request.Form["update"].Count > 0)
+            {
+                UpdateQuestion();
+            }
+            return RedirectToPage();
+        }
+        private void UpdateQuestion()
+        {
+            using var context = new QuizCarLicenseContext();
+
+            var questionDB = context.QuizQuestions.Include(q => q.QuizAnswers)
+            .FirstOrDefault(a => a.QuestionId == QuestionInput.QuestionId);
+
+            if (questionDB != null)
+            {
+                questionDB.Content = QuestionInput.Content;
+                questionDB.Score = QuestionInput.Score;
+                questionDB.UpdatedAt = DateTime.Now;
+
+                foreach (var inputAnswer in QuestionInput.QuizAnswers)
+                {
+                    var existingAnswer = questionDB.QuizAnswers
+                   .FirstOrDefault(ans => ans.AnswerId == inputAnswer.AnswerId);
+                    if (existingAnswer != null)
+                    {
+                        // Update existing answer
+                        existingAnswer.Content = inputAnswer.Content;
+                        existingAnswer.IsCorrect = inputAnswer.IsCorrect;
+                    }
+                    else
+                    {
+                        // Add new answer if it doesn't exist
+                        questionDB.QuizAnswers.Add(new QuizAnswer
+                        {
+                            Content = inputAnswer.Content,
+                            IsCorrect = inputAnswer.IsCorrect
+                        });
+                    }
+
+                }
+                         context.SaveChanges();
+            }
+
+        }
+        private void InsertQuestion()
+        {
+
+            using var context = new QuizCarLicenseContext();
+
+            // Create the QuizQuestion entity
+            var quizQuestion = new QuizQuestion
+            {
+                Content = QuestionInput.Content,
+                Score = QuestionInput.Score,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                Active = true,
+                QuizAnswers = QuestionInput.QuizAnswers.Select(ans => new QuizAnswer
+                {
+                    Content = ans.Content,
+                    IsCorrect = ans.IsCorrect
+                }).ToList()
+            };
+
+            context.QuizQuestions.Add(quizQuestion);
+            context.SaveChanges();
+        }
+        public IActionResult OnGetDelete(int code)
+        {
+            using var context = new QuizCarLicenseContext();
+            var question = context.QuizQuestions.FirstOrDefault(p => p.QuestionId == code);
+            if (question != null)
+            {
+                context.QuizQuestions.Remove(question);
+                context.SaveChanges();
+            }
+            return RedirectToPage();
+        }
+
+    }
+}

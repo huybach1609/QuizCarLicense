@@ -1,0 +1,122 @@
+﻿@using QuizCarLicense.Repositories.Interfaces
+
+@{
+    bool isAuth= User?.Identity?.IsAuthenticated == true;
+    
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>@(ViewData["Title"] ?? "Not")</title>
+    <meta name="author" content="BachlhHE173392" />
+    <meta name="description" content="Application quiz for driven licence test" />
+    <meta name="keywords" content="keywords,here" />
+    <link rel="stylesheet" href="~/css/output.css" />
+    <link rel="stylesheet" href="~/lib/flowbite/dist/flowbite.css" />
+    <link rel="icon" href="~/Image/Icon/accessibility.ico" />
+</head>
+
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <nav class="bg-white/60 fixed top-0 flex w-full flex-wrap items-center justify-between border-gray-200 p-4 backdrop-blur-sm">
+
+        <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-accessibility"><circle cx="16" cy="4" r="1" /><path d="m18 19 1-7-6 1" /><path d="m5 8 3-3 5.5 3-2.36 3.5" /><path d="M4.24 14.5a5 5 0 0 0 6.88 6" /><path d="M13.76 17.5a5 5 0 0 0-6.88-6" /></svg>
+            <span class="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">TestDriven</span>
+        </a>
+        <div class="flex items-center space-x-1 rtl:space-x-reverse md:order-2 md:space-x-0">
+
+            @if (!isAuth)
+            {
+                <a asp-page="/Auth/Login" class="inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
+                   SignIn
+                </a>
+                <a asp-page="/Auth/SignIn" class="inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
+                   SignUp
+                </a>
+            }
+            else
+            {
+                <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="inline-flex items-center rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+                    @(User.FindFirst("FullName")?.Value ?? "Not Found")<svg class="ms-3 h-2.5 w-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4" />
+                    </svg>
+                </button>
+
+                <!-- Dropdown menu -->
+                <div id="dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow dark:bg-gray-700">
+                    <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
+                        <li>
+                            <a asp-page="/Take/Index" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Test History</a>
+                        </li>
+                        <li>
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</a>
+                        </li>
+                        <li>
+                            <a asp-page="/Auth/Login" asp-page-handler="Logout" class="inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
+                                Sign out
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            }
+
+        </div>
+        <div class="hidden w-full items-center justify-between md:flex md:w-auto md:order-1" id="navbar-language">
+            <ul class="mt-4 flex flex-col rounded-lg border border-gray-100 bg-gray-50 p-4 font-medium rtl:space-x-reverse dark:bg-gray-800 dark:border-gray-700 md:p-0 md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-white md:dark:bg-gray-900">
+
+                @{
+                    string link = "block px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700";
+                    var currentUrl = Context.Request.Path;
+                }
+                <li>
+                    <a asp-page="/quiz/index" class="@link @(currentUrl == "/Quiz" ? "bg-blue-200  text-blue-600 dark:bg-gray-600 dark:text-white" : "")" aria-current="page">Quiz</a>
+                </li>
+                <li>
+                    <a asp-page="/question/index" class="@link @(currentUrl == "/Question" ? "bg-blue-200  text-blue-600 dark:bg-gray-600 dark:text-white" : "")">Question bank</a>
+                </li>
+                <li>
+                    <a asp-page="/take/index" class="@link @(currentUrl == "/Take" ? "bg-blue-200 text-blue-600 dark:bg-gray-600 dark:text-white" : "")">Test History</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="h-20"></div>
+
+
+    <!--Container-->
+    @RenderBody()
+    <!--/container-->
+
+    <footer class="m-4 rounded-lg bg-white shadow dark:bg-gray-800">
+        <div class="mx-auto w-full max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
+            <span class="text-sm text-gray-500 dark:text-gray-400 sm:text-center">
+                © 2023 <a href="#" class="hover:underline">TestDriven™</a>. All Rights Reserved.
+            </span>
+            <ul class="mt-3 flex flex-wrap items-center text-sm font-medium text-gray-500 dark:text-gray-400 sm:mt-0">
+                <li>
+                    <a href="#" class="me-4 hover:underline md:me-6">About</a>
+                </li>
+                <li>
+                    <a href="#" class="me-4 hover:underline md:me-6">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="#" class="me-4 hover:underline md:me-6">Licensing</a>
+                </li>
+                <li>
+                    <a href="#" class="hover:underline">Contact</a>
+                </li>
+            </ul>
+        </div>
+    </footer>
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,258 @@
+﻿@page
+@using QuizCarLicense.Utils
+@using QuizCarLicense.Constrains
+@model QuizCarLicense.Pages.Question.Index
+@{
+    string traloicss = "bg-gray-200 p-2 rounded-md mb-1 text-gray-900 md:text-sm hover:bg-gray-300 ";
+    string traloitruecss = "bg-green-200  p-2 rounded-md mb-1 text-green-900 md:text-sm";
+    string btncss = "py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-full border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700";
+    string checkboxcss = "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600";
+
+    string inputcss = "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500";
+    string labelcss = "block mb-2 text-sm font-medium text-gray-900 dark:text-white";
+
+    // var user = User.Identity?.Name;
+    bool viewAsAdmin = User.IsInRole(UserRole.Admin.ToString());
+}
+
+
+
+<div class="m-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+    <div class="mb-4 text-xl font-medium leading-none tracking-tight text-gray-700 dark:text-white md:text-2xl">Preview question</div>
+    @if (Model.QuestionStore == null)
+    {
+        <div class="p-2 text-center">nothing to show</div>
+    }
+    else
+    {
+        @if (Model.QuestionStore.Image != null)
+        {
+            <figure class="mx-auto max-w-lg">
+                <img class="h-50 max-w-full rounded-lg" src="@(Model.QuestionStore != null ? Model.QuestionStore.Image : null)" alt="image description">
+                <figcaption class="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">Figure: Question @Model.QuestionStore.QuestionId</figcaption>
+            </figure>
+        }
+
+        <div class="flex justify-between">
+            <div class="p-2 font-semibold text-gray-700">@Model.QuestionStore.QuestionId. @Model.QuestionStore.Content</div>
+            @if (viewAsAdmin)
+            {
+                <a asp-page-handler="Delete" asp-route-code="@Model.QuestionStore.QuestionId" onclick="return confirm('delete quiz @Model.QuestionStore.QuestionId')" class="text-red-500"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg></a>
+            }
+        </div>
+        @if (Model.QuestionStore.QuizAnswers?.Any() == true)
+        {
+            <ul class="grid-cols-2 grid gap-3">
+                @foreach (var ans in Model.QuestionStore.QuizAnswers)
+                {
+                    @if (!ans.Content.Equals("none"))
+                    {
+                        <li class="@(ans.IsCorrect? traloitruecss:traloicss)">@ans.Content</li>
+                    }
+                }
+            </ul>
+        }
+        else
+        {
+            <div class="p-2 text-center">nothing to show</div>
+        }
+
+    }
+</div>
+
+
+
+@* list question  *@
+<div class="m-4 h-96 overflow-y-auto rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+    <div class="mb-4 text-xl font-medium leading-none tracking-tight text-gray-700 dark:text-white md:text-2xl">List</div>
+    <table class="w-full text-left text-sm text-gray-500 rtl:text-right dark:text-gray-400">
+        <thead class="z-10 sticky top-0 bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">
+                    QuestionId
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Score
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Content
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Active
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    <span class="sr-only">Edit</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var q in Model.ListQuestion)
+            {
+
+                <tr class="border-b bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-600">
+                    <th scope="row" class="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white">
+                        @q.QuestionId
+                    </th>
+                    <td class="px-6 py-4">
+                        @q.Score
+                    </td>
+                    <td class="px-6 py-4">
+                        @q.Content
+                    </td>
+                    <td class="px-6 py-4">
+                        @q.Active
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <a asp-page-handler="Preview" asp-route-id="@q.QuestionId"
+                           class="font-medium text-blue-600 hover:underline dark:text-blue-500">preview</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@* <div style="display: flex; gap:10px">
+    @for (int i = 0; i < Model.PageTotal; i++)
+    {
+        <a asp-route-pageNum="@(i+1)" asp-page-handler="Page" class="@(i == Model.PageNum-1 ? "bg-success text-white":"") p-2">@(i + 1)</a>
+    }
+</div> *@
+<div class="mb-4 flex justify-center">
+    <nav aria-label="Page navigation example">
+        <ul class="flex h-8 items-center -space-x-px text-sm">
+
+            @if (Model.PageTotal > 1)
+            {
+                <li>
+                    <a asp-route-pageNum="@(Model.PageNum > 1 ? Model.PageNum - 1 : 1)"
+                       asp-page-handler="Page"
+                       class="border-e-0 ms-0 flex h-8 items-center justify-center rounded-s-lg border border-gray-300 bg-white px-3 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                        <span class="sr-only">Previous</span>
+                        <svg class="h-2.5 w-2.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4" />
+                        </svg>
+                    </a>
+                </li>
+
+
+
+            }
+            @for (int i = 0; i < Model.PageTotal; i++)
+            {
+                <li>
+                    <a asp-route-pageNum="@(i + 1)"
+                       asp-page-handler="Page"
+                       class="@(i == Model.PageNum - 1 ? "z-10 flex h-8 items-center justify-center border border-blue-300 bg-blue-50 px-3 leading-tight text-blue-600 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+                                                                             : "flex h-8 items-center justify-center border border-gray-300 bg-white px-3 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white")">
+                    @(i + 1)
+                </a>
+            </li>
+                        }
+
+            @if (Model.PageTotal > 1)
+            {
+                <li>
+                    <a asp-route-pageNum="@(Model.PageNum<Model.PageTotal? Model.PageNum + 1 : Model.PageTotal)"
+                       asp-page-handler="Page"
+                       class="flex h-8 items-center justify-center rounded-e-lg border border-gray-300 bg-white px-3 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                        <span class="sr-only">Next</span>
+                        <svg class="h-2.5 w-2.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4" />
+                        </svg>
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>
+
+
+
+@if (viewAsAdmin)
+{
+    @* add question *@
+    <div class="m-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+        <p class="text-lg font-medium text-gray-900 dark:text-white"> Question:</p>
+        <form asp-page-handler="HandleSubmit" method="post" enctype="multipart/form-data" class="mx-5">
+            <div asp-validation-summary="All"></div>
+
+            <label asp-for="QuestionInput.Content" class="@labelcss">Question Content:</label>
+            <input value="@(Model.QuestionStore != null ? Model.QuestionStore.Content : null)" asp-for="QuestionInput.Content" class="@inputcss" />
+            <span asp-validation-for="QuestionInput.Content"></span>
+
+            <div class="mt-5 flex gap-10">
+                <div class="">
+                    <label asp-for="QuestionInput.Score" class="@labelcss">Score:</label>
+                    <input value="@(Model.QuestionStore != null ? Model.QuestionStore.Score : 1)" asp-for="QuestionInput.Score" class="@inputcss" />
+                    <span asp-validation-for="QuestionInput.Score"></span>
+                </div>
+
+                <div>
+                    <label asp-for="QuestionInput.ImageFile" class="mt-1 text-sm text-gray-500 dark:text-gray-300">SVG, PNG, JPG or GIF  </label>
+                    <input asp-for="QuestionInput.ImageFile" class="my-2 block w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 focus:outline-none dark:text-gray-400 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                           type="file" accept="image/*" />
+                </div>
+            </div>
+
+            @if (Model.QuestionStore.Image != null)
+            {
+                <figure class="max-w-lg">
+                    <img class="h-50 max-w-full rounded-lg" src="@(Model.QuestionStore != null ? Model.QuestionStore.Image : null)" alt="image description">
+                    <figcaption class="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">Image caption</figcaption>
+                </figure>
+            }
+
+
+            <div class="mt-5">
+                <p class="text-lg font-medium text-gray-900 dark:text-white"> Answers:</p>
+                <ul class="grid-cols-2 grid gap-4">
+                    @for (int i = 0; i < Model.QuestionInput.QuizAnswers.Count; i++)
+                    {
+                        <li>
+                            <label asp-for="QuestionInput.QuizAnswers[i].Content" class="@labelcss">Answer Content:</label>
+                            @{
+                                string content = null;
+                                bool isCorrect = false;
+                                int id = -1;
+                            }
+                            @if (Model.QuestionStore?.QuizAnswers != null)
+                            {
+                                if (i < Model.QuestionStore.QuizAnswers.Count)
+                                {
+                                    content = Model.QuestionStore.QuizAnswers.ToList()[i]?.Content;
+                                    isCorrect = Model.QuestionStore.QuizAnswers.ToList()[i]?.IsCorrect ?? false;
+                                    id = Model.QuestionStore.QuizAnswers.ToList()[i].AnswerId;
+                                }
+                            }
+
+                            <input asp-for="QuestionInput.QuizAnswers[i].AnswerId" class="@inputcss" value="@id" type="hidden" />
+                            <input asp-for="QuestionInput.QuizAnswers[i].Content" class="@inputcss" value="@content" />
+                            <span class="mt-2 text-sm text-red-600 dark:text-red-500" asp-validation-for="QuestionInput.QuizAnswers[i].Content"></span>
+
+                            <label asp-for="QuestionInput.QuizAnswers[i].IsCorrect" class="text-sm font-medium text-gray-900 dark:text-white">Is Correct:</label>
+                            <input asp-for="QuestionInput.QuizAnswers[i].IsCorrect" type="checkbox" checked="@isCorrect" class="@checkboxcss" />
+
+
+                            <span class="mt-2 text-sm text-red-600 dark:text-red-500" asp-validation-for="QuestionInput.QuizAnswers[i].IsCorrect"></span>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <div class="my-5">
+                @if (Model.QuestionStore != null)
+                {
+                    if (!string.IsNullOrEmpty(Model.QuestionStore.Content))
+                    {
+                        <input asp-for="QuestionInput.QuestionId" type="hidden" value="@(Model.QuestionStore != null ? Model.QuestionStore.QuestionId : null)" />
+                        <button class="@btncss" type="submit" name="update">Update</button>
+
+                    }
+                }
+                <button class="@btncss" type="submit" name="insert">Insert</button>
+            </div>
+        </form>
+    </div>
+}
+
+

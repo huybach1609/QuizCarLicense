@@ -1,0 +1,396 @@
+﻿@page
+@model QuizCarLicense.Pages.Test.TestPageModel
+@{
+    string btncss = "py-2.5 px-5  text-left text-sm font-medium text-blue-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 ";
+    string containerBtn = "m-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800";
+    var listQuestion = Model.TestQuestion;
+}
+<style>
+    html {
+    }
+
+    .selected {
+        background-color: #818cf8; /* Highlight selected answer */
+        color: #1e1b4b;
+    }
+
+        .selected:hover {
+            background-color: #1e1b4b !important; /* Highlight selected answer */
+            color: #818cf8 !important;
+        }
+
+    .answer-btn {
+        display: block;
+        margin: 10px 0;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .question-container {
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    #questions-container {
+        width: 70vw;
+    }
+
+    @@media(max-width: 800px) {
+        #questions-container {
+            width: 100vw;
+        }
+    }
+
+    .co {
+        height: 76vh;
+    }
+
+        .co::-webkit-scrollbar {
+            display: none; /* Hides the scrollbar for WebKit browsers */
+        }
+</style>
+<!-- Modal toggle -->
+<div class="flex">
+    <!-- Container for all questions -->
+    <div id="questions-container" class="co overflow-y-auto" style="scroll-behavior: smooth;">
+        @for (int i = 0; i < listQuestion.Count; i++)
+        {
+            <div class="question-block @containerBtn" id="question-@i">
+                @if (!listQuestion[i].Image.Equals("none"))
+                {
+                    <figure class="mx-auto max-w-lg">
+                        <img class="h-50 max-w-full rounded-xl" src="@(listQuestion[i]!=null?listQuestion[i].Image:null)" alt="image description">
+                        <figcaption class="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">Figure: Question @listQuestion[i].Id</figcaption>
+                    </figure>
+                }
+
+                <div class="font-semibold text-[#1e1b4b]">
+                    @(i + 1). @listQuestion[i].Content
+                </div>
+                <div class="grid-cols-2 grid gap-3">
+                    @for (int j = 0; j < listQuestion[i].Answers.Count; j++)
+                    {
+                        if (!listQuestion[i].Answers[j].Content.Equals("none"))
+                        {
+                            <button class="answer-btn @btncss" data-index="@i" data-question="@listQuestion[i].Id" data-answer-id="@listQuestion[i].Answers[j].Id">
+                                @{
+                                    char letter = (char)(97 + j);
+                                    string letterAsString = letter.ToString();
+                                }
+                                @letterAsString. @listQuestion[i].Answers[j].Content
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+    </div>
+    @Html.AntiForgeryToken()
+    <div class="h-28 w-[300px] pt-10">
+        <div id="countdownTimer" class="@containerBtn">
+            unlimit time
+        </div>
+
+        <div class="@containerBtn grid-cols-4 grid gap-3">
+            @for (int i = 0; i < listQuestion.Count; i++)
+            {
+                <a id="link-@listQuestion[i].Id" class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                   href="#question-@i">@(i + 1)</a>
+            }
+        </div>
+        <div class="@containerBtn">
+            <article class="flex max-w-xl flex-col items-start justify-between">
+                <div class="flex justify-between gap-x-4 text-xs">
+
+                    <time class="text-gray-500">
+                        <span>@(DateTime.Now.ToString("MMM dd, yyyy "))</span>
+                        <div>
+                            @(DateTime.Now.ToString("h:mm tt"))
+                        </div>
+                    </time>
+
+                    <a class="z-10 relative rounded-full bg-gray-50 px-3 py-1.5 font-medium text-gray-600 hover:bg-gray-100">
+                        0/@listQuestion.Count
+                    </a>
+                </div>
+                <div class="group relative">
+                    <h3 class="leading-6 group-hover:text-gray-600 mt-3 text-lg font-semibold text-gray-900">
+                        <a>
+                            <span class="absolute inset-0"></span>
+                            Quiz: @Model.QuizObject.Title
+                        </a>
+                    </h3>
+                    <p class="line-clamp-3 leading-6 mt-5 text-sm text-gray-600">
+                        @Model.QuizObject.Detail
+                    </p>
+                </div>
+
+                <div class="mt-5 text-sm font-semibold text-gray-900">Created by</div>
+                <div class="relative flex items-center gap-x-4">
+                    <img src="" alt="" class="h-10 w-10 rounded-full bg-gray-50">
+                    <div class="leading-6 text-sm">
+                        <p class="font-semibold text-gray-900">
+                            <a>
+                                <span class="absolute inset-0"></span>
+                                Michael Foster
+                            </a>
+                        </p>
+                        @* <p class="text-gray-600">Co-Founder / CTO</p> *@
+                    </div>
+                </div>
+            </article>
+        </div>
+
+
+        <div class="flex justify-center">
+            <button id="submit-answers" class="@btncss" style="margin-top: 20px;">Submit Answers</button>
+        </div>
+    </div>
+</div>
+
+
+
+<button data-dialog-target="dialog" id="btnTime"
+        class="ml-2 rounded-md border border-transparent bg-slate-800 px-4 py-2 text-center text-sm text-white shadow-md transition-all hover:shadow-lg hover:bg-slate-700 focus:bg-slate-700 focus:shadow-none active:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
+    Open Dialog
+</button>
+<div data-dialog-backdrop="dialog" id="default-model"
+     data-dialog-backdrop-close="true"
+     class="z-[999] bg-opacity-60 opacity-0 pointer-events-none fixed inset-0 grid h-screen w-screen place-items-center bg-black backdrop-blur-sm transition-opacity duration-300">
+    <div data-dialog="dialog"
+         class="relative m-4 w-2/5 min-w-[40%] max-w-[40%] rounded-lg bg-white p-4 shadow-sm">
+        <div class="shrink-0 flex items-center pb-4 text-xl font-medium text-slate-800">
+            Time Test
+        </div>
+        <div class="relative border-t border-slate-200 py-4 font-light leading-normal text-slate-600">
+            <form class="mx-auto max-w-sm" onsubmit="return submitTime(event)">
+                <span id="messTime" class="text-sm font-medium text-red-500"></span>
+                <label for="countries" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Select an option</label>
+                <select name="inputTime" id="countries" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option value="none" selected>Choose time</option>
+                    <option value="10">10 minutes</option>
+                    <option value="20">20 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="40">40 minutes</option>
+                    <option value="50">50 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="no">no limited</option>
+                    <option value="custom">custom time</option>
+                </select>
+                <div id="customTimeInput" class="mt-4 hidden">
+                    <label for="customTime" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Enter custom time (minutes)</label>
+                    <input type="number" id="customTime" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter time in minutes">
+                </div>
+                <div class="shrink-0 flex flex-wrap items-center justify-end pt-4">
+                    <button type="submit" id="confirmBtn" class="ml-2 rounded-md border border-transparent bg-green-600 px-4 py-2 text-center text-sm text-white shadow-md transition-all hover:shadow-lg hover:bg-green-700 focus:bg-green-700 focus:shadow-none active:bg-green-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+    // Array to store selected answers (by ID)
+    const selectedAnswers = [];
+
+
+    function loadAllQuestions() {
+
+
+
+        const questionsContainer = document.getElementById('questions-container');
+        const answerButtons = questionsContainer.querySelectorAll('.answer-btn');
+        const links = document.querySelectorAll('[id^="link-"]');
+
+        answerButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const questionId = this.getAttribute('data-question');
+                const answerId = this.getAttribute('data-answer-id');
+                const questionIndex = this.getAttribute('data-index');
+                console.log(questionIndex);
+
+                if (this.classList.contains('selected')) {
+                    this.classList.remove('selected');
+                    removeAnswerFromList(questionId, answerId);
+                    links[questionIndex].classList.remove('selected');
+                } else {
+                    this.classList.add('selected');
+                    links[questionIndex].classList.add('selected');
+                    addAnswerToList(questionId, answerId);
+                }
+            });
+        });
+    }
+
+    function addAnswerToList(questionId, answerId) {
+        const answer = { questionId: parseInt(questionId), answerId: parseInt(answerId) };
+        selectedAnswers.push(answer);
+        console.log('Answer added:', answer);
+    }
+
+    function removeAnswerFromList(questionId, answerId) {
+        const index = selectedAnswers.findIndex(
+            item => item.questionId === parseInt(questionId) && item.answerId === parseInt(answerId)
+        );
+        if (index !== -1) {
+            selectedAnswers.splice(index, 1);
+            console.log('Answer removed:', { questionId, answerId });
+        }
+    }
+
+    var startTime = new Date();
+    var startTime3 = new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' });
+    console.log(startTime);
+    console.log(startTime3);
+    document.getElementById('submit-answers').addEventListener('click', () => {
+        if (!confirm("Are you sure you want to submit?")) {
+            return;
+        }
+
+        console.log('Submitting answers:', selectedAnswers);
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+
+        const body = {
+            "quizId": "@Model.QuizId",
+            "listAnswers": selectedAnswers,
+            "startTime": startTime
+        }
+
+        console.log(body);
+        
+
+        fetch('/Test?handler=SubmitTest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify(body)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.takeData) {
+                        localStorage.setItem('takeResult', JSON.stringify(data.takeData));
+                    }
+                    alert(data.message);
+                    window.location.href = data.redirect
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting answers:', error);
+            });
+    });
+
+    window.onload = () => {
+
+        loadAllQuestions();
+    };
+
+    // cal timer of test
+    document.addEventListener("DOMContentLoaded", function () {
+        // Open the dialog on page load by simulating a button click
+        const openDialogButton = document.getElementById("btnTime");
+        openDialogButton.click();
+    });
+
+    // timer form
+    const selectElement = document.getElementById('countries');
+    const customTimeDiv = document.getElementById('customTimeInput');
+    const confirmButton = document.getElementById('confirmBtn');
+    const dialogBackdrop = document.getElementById("default-model");
+    const countTimer = document.getElementById('countdownTimer');
+
+    dialogBackdrop.removeAttribute("data-dialog-backdrop-close");
+
+
+    // enable form select text before test
+    selectElement.addEventListener('change', function () {
+        if (this.value === 'custom') {
+            customTimeDiv.classList.remove('hidden');
+        } else {
+            customTimeDiv.classList.add('hidden');
+        }
+    });
+
+    function submitTime(event) {
+        event.preventDefault();
+        const selectedValue = document.getElementById('countries').value;
+
+        var time = 0;
+
+
+        if (selectedValue === 'custom') {
+
+            const customTime = document.getElementById('customTime').value;
+            if (customTime) {
+                console.log(`Custom time: ${customTime} minutes`);
+                setCountTimer(customTime);
+                startTime = new Date();
+                closeDialog();
+            } else {
+                console.log("No custom time entered.");
+                document.getElementById("messTime").innerText = 'No custom time entered.';
+            }
+
+        } else if (selectedValue === 'none') {
+            document.getElementById("messTime").innerText = 'No select be selected.';
+
+        } else if (selectedValue === 'no') {
+            startTime = new Date();
+            closeDialog();
+        }
+        else {
+            console.log(`Selected time: ${selectedValue}`);
+            setCountTimer(selectedValue);
+            startTime = new Date();
+            closeDialog();
+        }
+    }
+    // create timer function
+    function setCountTimer(numberTime) {
+        const countDownTime = numberTime * 60 * 1000;
+
+        const startTime = new Date().getTime();
+
+        // Update the countdown every second
+        const interval = setInterval(function () {
+            const now = new Date().getTime();
+
+            // Find the time difference
+            const timeLeft = countDownTime - (now - startTime);
+
+            // Calculate minutes and seconds
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+            // Display the result in the `countTimer` element
+            countTimer.innerHTML = minutes + "m " + seconds + "s ";
+
+            // If the countdown is finished
+            if (timeLeft < 0) {
+                clearInterval(interval);
+                countTimer.innerHTML = "Time's up!";
+                document.getElementById('submit-answers').click();
+            }
+        }, 1000); // Update every 1 second
+
+
+    }
+
+    function closeDialog() {
+        dialogBackdrop.style.display = 'none';  // Hide the dialog
+    };
+
+</script>
+<script src="https://unpkg.com/@@material-tailwind/html@latest/scripts/dialog.js"></script>
