@@ -84,10 +84,12 @@ dotnet test
 Add more unit and integration tests under the `Tests/` directory as the project evolves.
 
 ## Demo & Screenshots
-To display a demo image or animated GIF in the README, add the asset to the repository (for example inside `wwwroot/images/`). Then reference it using Markdown:
-```markdown
-![QuizCarLicense demo](wwwroot/images/demo.png)
-```
+![QuizCarLicense demo 1](./Demo/Screenshot_1.png)
+![QuizCarLicense demo 2](./Demo/Screenshot_2.png)
+![QuizCarLicense demo 3](./Demo/Screenshot_3.png)
+![QuizCarLicense demo 5](./Demo/Screenshot_5.png)
+![QuizCarLicense demo 6](./Demo/Screenshot_6.png)
+
 For externally hosted media, use the full URL instead of a relative path.
 
 ## Deployment
@@ -104,8 +106,6 @@ For externally hosted media, use the full URL instead of a relative path.
 
 Please follow the existing coding conventions and run the test suite before submitting PRs.
 
-## License
-Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 - **Project Maintainer**: Huy Bach – <bachlh03@gmail.com>
