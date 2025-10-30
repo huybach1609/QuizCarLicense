@@ -42,13 +42,16 @@
                 <li>
                     <a asp-page="/take/index" class="@link @(currentUrl == "/Take" ? "bg-blue-200 text-blue-600 dark:bg-gray-600 dark:text-white" : "")">Test History</a>
                 </li>
-                <li>
-                    <a asp-page="/Auth/Login" class=" @link flex w-full md:hidden ">SignIn</a>
-                </li>
-                <li>
-                    <a asp-page="/Auth/SignIn" class=" @link flex md:hidden">SignUp</a>
-                </li>
 
+                @if (!isAuth)
+                {
+                    <li>
+                        <a asp-page="/Auth/Login" class=" @link flex w-full md:hidden ">SignIn</a>
+                    </li>
+                    <li>
+                        <a asp-page="/Auth/SignIn" class=" @link flex md:hidden">SignUp</a>
+                    </li>
+                }
             </ul>
         </div>
 

@@ -34,15 +34,39 @@ namespace QuizCarLicense.Pages.Test
         {
             if (result is null) return BadRequest(new { message = "No answers received." });
 
+            float score = await _testService.CalculateScoreAsync(result, ct);
+
             // Get userId; if not logged in then return 401
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr))
-                return new UnauthorizedObjectResult(new { message = "You must sign in to submit the test." });
 
+            if (string.IsNullOrEmpty(userIdStr))
+            {
+                // Store guest result in session
+                var guestResult = new
+                {
+                    Score = score,
+                    QuizId = result.QuizId,
+                    StartTime = result.StartTime,
+                    CompletedAt = DateTime.UtcNow,
+                    Answers = result.ListAnswers
+                };
+
+                HttpContext.Session.SetString("GuestTestResult",
+                    System.Text.Json.JsonSerializer.Serialize(guestResult));
+
+                var response1 = new
+                {
+                    message = $"Answers submitted successfully! Score: {score}. Sign in to save your results permanently.",
+                    success = true,
+                    takeData = new { takeId = -1, score = score }, // Use -1 to indicate guest
+                    redirect = "/Take/GuestResult" // New page for guest results
+                };
+
+                return new JsonResult(response1);
+            }
             int userId = int.Parse(userIdStr);
 
             // Calculate score + save result
-            float score = await _testService.CalculateScoreAsync(result, ct);
             var take = await _testService.SaveResultAsync(score, result, userId, ct);
 
             var response = new

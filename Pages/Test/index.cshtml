@@ -338,7 +338,9 @@
                         localStorage.setItem('takeResult', JSON.stringify(data.takeData));
                     }
                     alert(data.message);
-                    window.location.href = data.redirect
+                    if(data.redirect  != ""){
+                        window.location.href = data.redirect
+                    }
                 }
             })
             .catch(error => {

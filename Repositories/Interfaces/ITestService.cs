@@ -13,5 +13,6 @@ namespace QuizCarLicense.Repositories.Interfaces
 
         /// <summary> save resutl test to take record </summary>
         Task<Take> SaveResultAsync(float score, TestResutlResponse result, int userId, CancellationToken ct);
+        Task<List<QuestionDTO>> BuildGuestTestResultAsync(Models.Quiz quiz, List<TestAnswerRequest> userAnswers, CancellationToken ct);
     }
 }

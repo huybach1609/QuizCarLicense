@@ -17,7 +17,7 @@ namespace QuizCarLicense.Pages.Question
         public string Message { get; set; } = "";
         public bool ViewAsAdmin { get; set; }
 
-        public int PageSize { get; set; } = 2;
+        public int PageSize { get; set; } = 10;
         public int PageTotal { get; set; }
         public int PageNum { get; set; } = 1;
 
