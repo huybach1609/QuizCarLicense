@@ -76,48 +76,40 @@ namespace QuizCarLicense.Repositories.Implementations
             return true;
         }
 
-        //public async Task<Quiz> GetQuizzes(int QuizId)
-        //{
-        //    var quiz = await _context.Quizzes.Include(q => q.Questions)
-        //        .FirstOrDefaultAsync(q => q.QuizId == QuizId);
-        //    return quiz;
-        //}
-        //public async Task<bool> InsertQuiz(Models.Quiz quizDb, int userId)
-        //{
-        //    //Models.Quiz quizDb = QuizInput;
-        //    quizDb.QuizId = new();
-        //    quizDb.CreatedAt = DateTime.Now;
-        //    quizDb.UpdatedAt = DateTime.Now;
-        //    quizDb.UserId = userId;
-        //    _context.Quizzes.Add(quizDb);
-        //    await _context.SaveChangesAsync();
-        //    return true;
-        //}
 
-        //public async Task<bool> DeleteQuiz(int id)
-        //{
-        //    var quizDb = _context.Quizzes.FirstOrDefault(x => x.QuizId == id);
-        //    if (quizDb == null) { return false; }
-        //    _context.Quizzes.Remove(quizDb);
-        //    var result = await _context.SaveChangesAsync();
+        // NEW: query all selectable questions (for the Add page)
+        public async Task<List<QuizQuestion>> GetAllQuestionsAsync(CancellationToken ct = default) =>
+            await _context.QuizQuestions
+                .AsNoTracking()
+                .OrderBy(q => q.QuestionId)
+                .ToListAsync(ct);
 
-        //    Console.WriteLine(result);
-        //    return true;
-        //}
+        // NEW: load a quiz with its current questions (tracked for update)
+        public async Task<Quiz?> GetWithQuestionsAsync(int quizId, CancellationToken ct = default) =>
+            await _context.Quizzes
+                .Include(q => q.Questions)
+                .FirstOrDefaultAsync(q => q.QuizId == quizId, ct);
 
-        //public async Task<bool> UpdateQuiz(Models.Quiz quizInput, int userId)
-        //{
-        //    Models.Quiz? quizDb = _context.Quizzes.FirstOrDefault(q => q.QuizId == quizInput.QuizId);
-        //    if (quizDb == null) return false;
-        //    quizDb.Title = quizInput.Title;
-        //    quizDb.Detail = quizInput.Detail;
-        //    quizDb.CreatedAt = DateTime.Now;
-        //    quizDb.UpdatedAt = DateTime.Now;
-        //    quizDb.UserId = userId;
-        //    await _context.SaveChangesAsync();
-        //    return true;
-        //}
+        // NEW: replace question set atomically
+        public async Task<bool> ReplaceQuestionsAsync(int quizId, IEnumerable<int> questionIds, CancellationToken ct = default)
+        {
+            var quiz = await _context.Quizzes
+                .Include(q => q.Questions)
+                .FirstOrDefaultAsync(q => q.QuizId == quizId, ct);
+            if (quiz is null) return false;
 
+            // Load selected questions in one query
+            var selected = await _context.QuizQuestions
+                .Where(q => questionIds.Contains(q.QuestionId))
+                .ToListAsync(ct);
 
+            quiz.Questions.Clear();
+            foreach (var q in selected)
+                quiz.Questions.Add(q);
+
+            quiz.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync(ct);
+            return true;
+        }
     }
 }

@@ -2,7 +2,7 @@ using QuizCarLicense.Constrains;
 using System;
 using System.Collections.Generic;
 
-namespace QuizCarLicense.DTO
+namespace QuizCarLicense.DTOs
 {
     public class AnswerDTO
     {

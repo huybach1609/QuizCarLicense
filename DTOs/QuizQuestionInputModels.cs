@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 
-namespace QuizCarLicense.DTO
+namespace QuizCarLicense.DTOs
 {
     public class QuizAnswerInputModel
     {
@@ -12,7 +12,7 @@ namespace QuizCarLicense.DTO
 
     public class QuizQuestionInputModel
     {
-        public int? QuestionId { get; set; }
+        public int QuestionId { get; set; } = 0;
         public string Content { get; set; } = "";
         public int Score { get; set; } = 1;
         public IFormFile? ImageFile { get; set; }

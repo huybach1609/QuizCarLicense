@@ -412,3 +412,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 appsettings.*.json
+
+openspec
+.cursor

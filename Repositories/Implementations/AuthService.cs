@@ -1,25 +1,22 @@
-﻿using Microsoft.EntityFrameworkCore;
-using QuizCarLicense.DTO;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using QuizCarLicense.Constrains;
+using QuizCarLicense.DTOs;
+using QuizCarLicense.DTOs.Auth;
 using QuizCarLicense.Models;
 using QuizCarLicense.Repositories.Interfaces;
 using QuizCarLicense.Utils;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
-using QuizCarLicense.DTO.Auth;
 
 namespace QuizCarLicense.Repositories.Implementations
 {
     public class AuthService : IAuthService
     {
-        private readonly IUserSessionManager _userSessionManager;
         private readonly QuizCarLicenseContext _context;
 
-        public AuthService(QuizCarLicenseContext context, IUserSessionManager userSessionManager)
+        public AuthService(QuizCarLicenseContext context )
         {
             _context = context;
-            _userSessionManager = userSessionManager;
         }
 
         public async Task<MessageReturn> Login(string username, string password)
@@ -44,7 +41,6 @@ namespace QuizCarLicense.Repositories.Implementations
                 CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrinciple = new ClaimsPrincipal(claimsIdentity);
 
-            _userSessionManager.SetUserInfo(userDb);
 
             Console.WriteLine($"set session : {userDb.Role.ToString()}");
 
@@ -56,14 +52,31 @@ namespace QuizCarLicense.Repositories.Implementations
             throw new NotImplementedException();
         }
 
-        public MessageReturn SignIn()
+        public async Task<MessageReturn> Signup(CreateUserRequest request)
         {
-            throw new NotImplementedException();
-        }
-
-        public MessageReturn SignOut()
-        {
-            throw new NotImplementedException();
+            var userDb =await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(request.UserName));
+            if (userDb != null)
+            {
+                return new MessageReturn
+                {
+                    Message = "UserName already exist",
+                    Result = false
+                };
+            }
+            Models.User user = new()
+            {
+                Username = request.UserName,
+                FullName = request.FullName,
+                Password = StringUtils.ComputeSha256Hash(request.Password ?? "123"),
+                Role = UserRole.User.ToString()
+            };
+            _context.Users.Add(user);
+           await _context.SaveChangesAsync();
+            return new MessageReturn
+            {
+                Message = "Signup successful",
+                Result = true
+            };
         }
     }
 }

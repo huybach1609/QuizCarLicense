@@ -1,7 +1,6 @@
 ﻿@page
 @using QuizCarLicense.Constrains
-@using QuizCarLicense.DTO
-@using QuizCarLicense.Constrains
+@using QuizCarLicense.DTOs
 @model QuizCarLicense.Pages.Take.ShowResultModel
 @{
     string btncss = "py-2.5 px-5  text-left text-sm font-medium text-blue-900 focus:outline-none bg-white rounded-lg border border-gray-200 ";
@@ -77,18 +76,28 @@
 <div class="flex">
     <!-- Container for all questions -->
     <div id="questions-container" class="co overflow-y-auto" style="scroll-behavior: smooth;">
+        <!-- list of question -->
         @for (int i = 0; i < listQuestion.Count; i++)
         {
             QuestionDTO quesDTO = listQuestion[i];
-
             <div class="question-block @containerBtn" id="question-@i">
+                @if (listQuestion[i].Image != null)
+                {
+                    <figure class="mx-auto max-w-lg">
+                        <img class="h-50 max-w-full rounded-xl" src="@(listQuestion[i] != null ? listQuestion[i].Image : null)" alt="image description">
+                        <figcaption class="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">Figure: Question @listQuestion[i].Id</figcaption>
+                    </figure>
+                }
+
                 <div class="flex justify-between font-semibold text-[#1e1b4b]">
                     <span>@(i + 1). @listQuestion[i].Content</span>
                     <span class="text-green-500">@(quesDTO.Status == QuestionStatus.TRUE ? "+1" : "")</span>
                 </div>
+            
                 <div class="grid-cols-2 grid gap-3">
                     @for (int j = 0; j < listQuestion[i].Answers.Count; j++)
                     {
+
                         if (!listQuestion[i].Answers[j].Content.Equals("none"))
                         {
                             AnswerDTO ansDTO = listQuestion[i].Answers[j];
@@ -96,26 +105,25 @@
                             string chooseAns = quesDTO.AnswerId == ansDTO.Id && quesDTO.Status == QuestionStatus.FALSE ? "wrongAns" : "";
                             string rightAnsView = ansDTO.IsCorrect ? "text-green-600" : "";
 
-                            <button class="answer-btn @btncss @chooseAns @rightAns"
-                                    data-index="@i"
-                                    data-question="@listQuestion[i].Id"
-                                    data-answer-id="@listQuestion[i].Answers[j].Id" disabled>
+                            <div class="answer-btn @btncss @chooseAns @rightAns"
+                                 data-index="@i"
+                                 data-question="@listQuestion[i].Id"
+                                 data-answer-id="@listQuestion[i].Answers[j].Id" disabled>
                                 <div class="@rightAnsView">
                                     @{
                                         char letter = (char)(97 + j);
                                         string letterAsString = letter.ToString();
                                     }
                                     @letterAsString. @listQuestion[i].Answers[j].Content
-
                                 </div>
-                            </button>
+                            </div>
                         }
                     }
                 </div>
             </div>
         }
-
     </div>
+
     <div class="h-28 w-[300px] pt-10">
         <div class="@containerBtn grid-cols-4 grid gap-3">
             @for (int i = 0; i < listQuestion.Count; i++)
@@ -127,7 +135,7 @@
 
                 <a id="link-@listQuestion[i].Id"
                    class="flex h-8 w-8 items-center justify-center rounded-lg border
-border-gray-300 bg-white px-2 text-sm font-medium text-gray-500 @rightAns @chooseAns @notfinish"
+    border-gray-300 bg-white px-2 text-sm font-medium text-gray-500 @rightAns @chooseAns @notfinish"
                    href="#question-@i">@(i + 1)</a>
             }
 
@@ -159,14 +167,15 @@ border-gray-300 bg-white px-2 text-sm font-medium text-gray-500 @rightAns @choos
                     </p>
                 </div>
 
-                <div class="mt-5 text-sm font-semibold text-gray-900">Created by</div>
+                <div class="mt-5 text-sm font-semibold text-gray-900">Quiz created by</div>
                 <div class="relative flex items-center gap-x-4">
-                    <img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-10 w-10 rounded-full bg-gray-50">
+                    @* <img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-10 w-10 rounded-full bg-gray-50"> *@
                     <div class="leading-6 text-sm">
                         <p class="font-semibold text-gray-900">
                             <a>
                                 <span class="absolute inset-0"></span>
-                                Michael Foster
+                                @(Model.TakeObject.Quiz.User?.FullName ?? "Not Found")
+                                @* Michael Foster *@
                             </a>
                         </p>
                         @* <p class="text-gray-600">Co-Founder / CTO</p> *@
@@ -185,7 +194,6 @@ border-gray-300 bg-white px-2 text-sm font-medium text-gray-500 @rightAns @choos
                class="@btnDelete">Print Result</a>
         </div>
     </div>
-
 </div>
 <script>
 
@@ -199,24 +207,24 @@ border-gray-300 bg-white px-2 text-sm font-medium text-gray-500 @rightAns @choos
 
 
 
-        answerButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const questionId = this.getAttribute('data-question');
-                const answerId = this.getAttribute('data-answer-id');
-                const questionIndex = this.getAttribute('data-index');
-                console.log(questionIndex);
+        // answerButtons.forEach(button => {
+        //     button.addEventListener('click', function () {
+        //         const questionId = this.getAttribute('data-question');
+        //         const answerId = this.getAttribute('data-answer-id');
+        //         const questionIndex = this.getAttribute('data-index');
+        //         console.log(questionIndex);
 
-                if (this.classList.contains('selected')) {
-                    this.classList.remove('selected');
-                    removeAnswerFromList(questionId, answerId);
-                    links[questionIndex].classList.remove('selected');
-                } else {
-                    this.classList.add('selected');
-                    links[questionIndex].classList.add('selected');
-                    addAnswerToList(questionId, answerId);
-                }
-            });
-        });
+        //         if (this.classList.contains('selected')) {
+        //             this.classList.remove('selected');
+        //             removeAnswerFromList(questionId, answerId);
+        //             links[questionIndex].classList.remove('selected');
+        //         } else {
+        //             this.classList.add('selected');
+        //             links[questionIndex].classList.add('selected');
+        //             addAnswerToList(questionId, answerId);
+        //         }
+        //     });
+        // });
     }
 
     function addAnswerToList(questionId, answerId) {

@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using QuizCarLicense.Constrains;
-using QuizCarLicense.DTO;
-using QuizCarLicense.DTO.Auth;
+using QuizCarLicense.DTOs;
+using QuizCarLicense.DTOs.Auth;
+using QuizCarLicense.Filters;
 using QuizCarLicense.Models;
 using QuizCarLicense.Repositories.Interfaces;
 using QuizCarLicense.Utils;
@@ -13,14 +14,12 @@ using System.Threading.Tasks;
 
 namespace QuizCarLicense.Pages.Auth
 {
-    [Authorize]
+    [ServiceFilter(typeof(RedirectIfAuthenticatedFilter))]
     public class LoginModel : PageModel
     {
-        private readonly IUserSessionManager _userSessionManager;
         private readonly IAuthService _authService;
-        public LoginModel(IUserSessionManager userSessionManager, IAuthService authService)
+        public LoginModel(IAuthService authService)
         {
-            _userSessionManager = userSessionManager;
             _authService = authService;
         }
 
@@ -67,48 +66,6 @@ namespace QuizCarLicense.Pages.Auth
 
                 return RedirectToPage("/Index");
             }
-        }
-        public async Task<IActionResult> OnGetLogoutAsync()
-        {
-            _userSessionManager.RemoveUserInfo();
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToPage("/Auth/Login");
-        }
-        public IActionResult OnPostSignUp()
-        {
-            // Manually retrieve the input values from the form
-            string userName = Request.Form["UserName"];
-            string fullName = Request.Form["FullName"];
-            string password = Request.Form["password"];
-            string repassword = Request.Form["repassword"];
-
-            // Validate the sign-up input
-            if (password == repassword)
-            {
-                using (var context = new QuizCarLicenseContext())
-                {
-                    var userDb = context.Users.FirstOrDefault(u => u.Username.Equals(userName));
-                    if (userDb != null)
-                    {
-                        Message = "UserName already exist";
-                        return Page();
-                    }
-                    Models.User user = new()
-                    {
-                        Username = userName,
-                        FullName = fullName,
-                        Password = StringUtils.ComputeSha256Hash(password ?? "123"),
-                        Role = UserRole.User.ToString()
-                    };
-                    context.Users.Add(user);
-                    context.SaveChanges();
-                }
-            }
-            else
-            {
-                Message = "password mismatch error";
-            }
-            return Page();
         }
     }
 }

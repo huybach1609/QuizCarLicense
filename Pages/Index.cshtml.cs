@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using QuizCarLicense.DTO;
+using QuizCarLicense.DTOs;
 using QuizCarLicense.Repositories.Interfaces;
 using System.Security.Claims;
 

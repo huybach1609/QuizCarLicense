@@ -9,7 +9,6 @@ using System.Security.Claims;
 
 namespace QuizCarLicense.Pages.Take
 {
-    [ServiceFilter(typeof(UserFilter))]
     public class IndexModel : PageModel
     {
         private readonly QuizCarLicenseContext _context;

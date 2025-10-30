@@ -1,0 +1,15 @@
+services:
+  app:
+    image: quizcarlicense:latest
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:6789
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - ConnectionStrings__Default=server=db.homelab.local,1433;database=QuizCarLicense;uid=sa;pwd=5Z#6G%te;TrustServerCertificate=True
+      - ConnectionStrings__Dev=server=db.homelab.local,1433;database=QuizCarLicense;uid=sa;pwd=5Z#6G%te;TrustServerCertificate=True
+    ports:
+      - "6789:6789"   
+    networks: [web]
+
+networks:
+  web: {}

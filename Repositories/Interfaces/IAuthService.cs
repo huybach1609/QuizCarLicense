@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Identity.Client;
-using QuizCarLicense.DTO;
+using QuizCarLicense.DTOs;
+using QuizCarLicense.DTOs.Auth;
 using QuizCarLicense.Models;
 
 namespace QuizCarLicense.Repositories.Interfaces
@@ -16,10 +17,10 @@ namespace QuizCarLicense.Repositories.Interfaces
         public Task<MessageReturn> Login(string username, string password);
 
         /// <summary>
-        /// Signs in a user.
+        /// Signs up a user.
         /// </summary>
-        /// <returns>Sign in result.</returns>
-        public MessageReturn SignIn();
+        /// <returns>Signup result.</returns>
+        public Task<MessageReturn> Signup(CreateUserRequest request);
 
         /// <summary>
         /// Logs out a user.

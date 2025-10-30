@@ -1,8 +1,7 @@
 ﻿@using QuizCarLicense.Repositories.Interfaces
 
 @{
-    bool isAuth= User?.Identity?.IsAuthenticated == true;
-    
+    bool isAuth = User?.Identity?.IsAuthenticated == true;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -20,27 +19,55 @@
 </head>
 
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
-    <nav class="bg-white/60 fixed top-0 flex w-full flex-wrap items-center justify-between border-gray-200 p-4 backdrop-blur-sm">
+    <nav class="bg-white/60 fixed top-0 z-50 flex w-full flex-wrap justify-between justify-center border-b border-gray-200 p-4 backdrop-blur-sm">
 
         <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-accessibility"><circle cx="16" cy="4" r="1" /><path d="m18 19 1-7-6 1" /><path d="m5 8 3-3 5.5 3-2.36 3.5" /><path d="M4.24 14.5a5 5 0 0 0 6.88 6" /><path d="M13.76 17.5a5 5 0 0 0-6.88-6" /></svg>
             <span class="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">TestDriven</span>
         </a>
-        <div class="flex items-center space-x-1 rtl:space-x-reverse md:order-2 md:space-x-0">
 
+
+        <div class="hidden w-full md:flex md:w-auto md:order-1" id="navbar-language">
+            <ul class="mt-4 flex flex-col rounded-lg border border-gray-100 bg-gray-50 p-4 font-medium rtl:space-x-reverse dark:bg-gray-800 dark:border-gray-700 md:mt-0 md:flex-row md:space-x-8 md:border-0 md:bg-transparent md:p-0">
+                @{
+                    string link = "block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700";
+                    var currentUrl = Context.Request.Path;
+                }
+                <li>
+                    <a asp-page="/quiz/index" class="@link @(currentUrl == "/Quiz" ? "bg-blue-200 text-blue-600 dark:bg-gray-600 dark:text-white" : "")" aria-current="page">Quiz</a>
+                </li>
+                <li>
+                    <a asp-page="/question/index" class="@link @(currentUrl == "/Question" ? "bg-blue-200 text-blue-600 dark:bg-gray-600 dark:text-white" : "")">Question bank</a>
+                </li>
+                <li>
+                    <a asp-page="/take/index" class="@link @(currentUrl == "/Take" ? "bg-blue-200 text-blue-600 dark:bg-gray-600 dark:text-white" : "")">Test History</a>
+                </li>
+                <li>
+                    <a asp-page="/Auth/Login" class=" @link flex w-full md:hidden ">SignIn</a>
+                </li>
+                <li>
+                    <a asp-page="/Auth/SignIn" class=" @link flex md:hidden">SignUp</a>
+                </li>
+
+            </ul>
+        </div>
+
+        <div class="flex items-center space-x-1 rtl:space-x-reverse md:order-2 md:space-x-0">
             @if (!isAuth)
             {
-                <a asp-page="/Auth/Login" class="inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
-                   SignIn
+                <!-- Desktop SignIn/SignUp - hidden on mobile -->
+                <a asp-page="/Auth/Login" class="hidden md:inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
+                    SignIn
                 </a>
-                <a asp-page="/Auth/SignIn" class="inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
-                   SignUp
+                <a asp-page="/Auth/SignIn" class="hidden md:inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
+                    SignUp
                 </a>
             }
             else
             {
-                <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="inline-flex items-center rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
-                    @(User.FindFirst("FullName")?.Value ?? "Not Found")<svg class="ms-3 h-2.5 w-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="inline-flex items-center rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+                    @(User.FindFirst("FullName")?.Value ?? "Not Found")
+                    <svg class="ms-3 h-2.5 w-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4" />
                     </svg>
                 </button>
@@ -55,36 +82,28 @@
                             <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</a>
                         </li>
                         <li>
-                            <a asp-page="/Auth/Login" asp-page-handler="Logout" class="inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
-                                Sign out
-                            </a>
+                            <form method="post" asp-page="/Auth/Logout" id="logoutForm" class="">
+                                <button type="submit"
+                                        class="w-full text-left block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white">
+                                    Logout
+                                </button>
+                                @Html.AntiForgeryToken()
+                            </form>
                         </li>
                     </ul>
                 </div>
             }
-
         </div>
-        <div class="hidden w-full items-center justify-between md:flex md:w-auto md:order-1" id="navbar-language">
-            <ul class="mt-4 flex flex-col rounded-lg border border-gray-100 bg-gray-50 p-4 font-medium rtl:space-x-reverse dark:bg-gray-800 dark:border-gray-700 md:p-0 md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-white md:dark:bg-gray-900">
 
-                @{
-                    string link = "block px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700";
-                    var currentUrl = Context.Request.Path;
-                }
-                <li>
-                    <a asp-page="/quiz/index" class="@link @(currentUrl == "/Quiz" ? "bg-blue-200  text-blue-600 dark:bg-gray-600 dark:text-white" : "")" aria-current="page">Quiz</a>
-                </li>
-                <li>
-                    <a asp-page="/question/index" class="@link @(currentUrl == "/Question" ? "bg-blue-200  text-blue-600 dark:bg-gray-600 dark:text-white" : "")">Question bank</a>
-                </li>
-                <li>
-                    <a asp-page="/take/index" class="@link @(currentUrl == "/Take" ? "bg-blue-200 text-blue-600 dark:bg-gray-600 dark:text-white" : "")">Test History</a>
-                </li>
-            </ul>
-        </div>
+        <!-- Mobile menu button -->
+        <button data-collapse-toggle="navbar-language" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg p-2 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 md:hidden" aria-controls="navbar-language" aria-expanded="false">
+            <span class="sr-only">Open main menu</span>
+            <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15" />
+            </svg>
+        </button>
     </nav>
     <div class="h-20"></div>
-
 
     <!--Container-->
     @RenderBody()
@@ -112,11 +131,8 @@
         </div>
     </footer>
 
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
-
 </body>
-
 </html>

@@ -46,5 +46,9 @@ namespace QuizCarLicense.Repositories.Interfaces
         /// <returns>True if successful, false otherwise.</returns>
         Task<bool> UpdateAsync(Quiz quiz, int userId, CancellationToken ct = default);
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);
+
+        Task<List<QuizQuestion>> GetAllQuestionsAsync(CancellationToken ct = default);
+        Task<Quiz?> GetWithQuestionsAsync(int quizId, CancellationToken ct = default);
+        Task<bool> ReplaceQuestionsAsync(int quizId, IEnumerable<int> questionIds, CancellationToken ct = default);
     }
 }

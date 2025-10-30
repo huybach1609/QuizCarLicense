@@ -1,84 +1,54 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using QuizCarLicense.Filters;
 using QuizCarLicense.Models;
+using QuizCarLicense.Repositories.Interfaces;
 
 namespace QuizCarLicense.Pages.Quiz
 {
     [Authorize(Policy = "UserOrAdmin")]
     public class AddModel : PageModel
     {
-        [BindProperty] public List<int> SelectedQuestions { get; set; }
+        [BindProperty] public List<int> SelectedQuestions { get; set; } = new();
+        [BindProperty(SupportsGet = true)] public int Code { get; set; }
 
-        [BindProperty] public int Code { get; set; }
+        public List<QuizQuestion> ListQuestion { get; private set; } = new();
+        public Models.Quiz QuizModel { get; private set; } = new();
 
-        public List<Models.QuizQuestion> ListQuestion { get; set; } = new();
-        public Models.Quiz QuizModel { get; set; } = new();
+        private readonly IQuizService _quizService;
 
-        private readonly QuizCarLicenseContext _context;
+        public AddModel(IQuizService quizService) => _quizService = quizService;
 
-        public AddModel(QuizCarLicenseContext context)
-        {
-            _context = context;
-        }
-
-        public void OnGet(int code)
+        public async Task<IActionResult> OnGetAsync(int code, CancellationToken ct)
         {
             Code = code;
-            LoadData();
+            var quiz = await _quizService.GetWithQuestionsAsync(Code, ct);
+            if (quiz is null) return NotFound();
+
+            QuizModel = quiz;
+            ListQuestion = await _quizService.GetAllQuestionsAsync(ct);
+
+            // Pre-select existing questions
+            SelectedQuestions = quiz.Questions.Select(q => q.QuestionId).ToList();
+            return Page();
         }
-        private void LoadData()
+
+        public async Task<IActionResult> OnPostAsync(CancellationToken ct)
         {
-            ListQuestion = _context.QuizQuestions.ToList();
-
-            var quiz = _context.Quizzes
-                               .Include(q => q.Questions)
-                               .FirstOrDefault(q => q.QuizId == Code);
-            if (quiz != null)
+            // Validate the quiz exists
+            var quiz = await _quizService.GetWithQuestionsAsync(Code, ct);
+            if (quiz is null)
             {
-                List<int> questionSelect = new();
-                foreach (var question in quiz.Questions)
-                {
-                    questionSelect.Add(question.QuestionId);
-                }
-                SelectedQuestions = questionSelect;
+                ModelState.AddModelError(string.Empty, "Quiz not found.");
+                // reload data for redisplay
+                ListQuestion = await _quizService.GetAllQuestionsAsync(ct);
+                return Page();
             }
-         
-        }
-        public IActionResult OnPost()
-        {
-            if (SelectedQuestions != null && SelectedQuestions.Count > 0)
-            {
 
-                // get quiz by code
-                var quiz = _context.Quizzes.Include(q => q.Questions)
-                                     .FirstOrDefault(q => q.QuizId == Code);
-                if (quiz == null)
-                {
-                    ModelState.AddModelError(string.Empty, "Quiz not found.");
-                    LoadData();
-                    return Page();
-                }
-                // get question by QuizQuestions checkbox
-                var selectedQuestions = _context.QuizQuestions
-                                      .Where(q => SelectedQuestions.Contains(q.QuestionId))
-                                      .ToList();
+            // Replace questions (empty list means clear all)
+            await _quizService.ReplaceQuestionsAsync(Code, SelectedQuestions ?? Enumerable.Empty<int>(), ct);
 
-                quiz.Questions.Clear();
-                // add question to quiz db
-                foreach (var question in selectedQuestions)
-                {
-                    if (!quiz.Questions.Any(q => q.QuestionId == question.QuestionId))
-                    {
-                        quiz.Questions.Add(question);
-                    }
-                }
-                _context.SaveChanges();
-            }
-            //id = 1 & handler = ShowDetails
+            // redirect to detail
             return RedirectToPage("/Quiz/Detail", new { id = Code, handler = "ShowDetails" });
         }
     }

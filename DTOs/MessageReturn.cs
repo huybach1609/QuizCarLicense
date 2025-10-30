@@ -1,4 +1,4 @@
-﻿namespace QuizCarLicense.DTO
+﻿namespace QuizCarLicense.DTOs
 {
     public class MessageReturn
     {

@@ -18,32 +18,42 @@
     }
 
 </style>
+
 <div class="contain flex items-center justify-evenly">
     <div class="@containerCss">
         <div class="@formContainerCss">
             <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white md:text-2xl">
                 Create Account
             </h1>
-            <form class="space-y-4 md:space-y-6" method="post"
-                  asp-page-handler="SignUp">
+
+            <form method="post" asp-page-handler="SignUp" class="space-y-4 md:space-y-6">
                 <div>
-                    <label for="UserName" class="@labelCss">Username</label>
-                    <input type="text" name="UserName" id="email" class="@inputCss" placeholder="name" required="">
+                    <label asp-for="UserInput.UserName" class="@labelCss"></label>
+                    <input asp-for="UserInput.UserName" class="@inputCss" placeholder="Username" />
+                    <span asp-validation-for="UserInput.UserName" class="text-red-400 text-sm"></span>
                 </div>
+
                 <div>
-                    <label for="FullName" class="@labelCss">FullName</label>
-                    <input type="text" name="FullName" id="email" class="@inputCss" placeholder="Fullname" required="">
+                    <label asp-for="UserInput.FullName" class="@labelCss"></label>
+                    <input asp-for="UserInput.FullName" class="@inputCss" placeholder="Fullname" />
+                    <span asp-validation-for="UserInput.FullName" class="text-red-400 text-sm"></span>
                 </div>
+
                 <div>
-                    <label for="password" class="@labelCss">Password</label>
-                    <input type="password" name="password" id="password" placeholder="••••••••" class="@inputCss" required="">
+                    <label asp-for="UserInput.Password" class="@labelCss"></label>
+                    <input asp-for="UserInput.Password" class="@inputCss" type="password" placeholder="••••••••" />
+                    <span asp-validation-for="UserInput.Password" class="text-red-400 text-sm"></span>
                 </div>
+
                 <div>
-                    <label for="repassword" class="@labelCss">Re-Password</label>
-                    <input type="password" name="repassword" id="repassword" placeholder="••••••••" class="@inputCss" required="">
+                    <label asp-for="UserInput.RePassword" class="@labelCss"></label>
+                    <input asp-for="UserInput.RePassword" class="@inputCss" type="password" placeholder="••••••••" />
+                    <span asp-validation-for="UserInput.RePassword" class="text-red-400 text-sm"></span>
                 </div>
-                <div class="text-sm text-red-400">@Model.Message</div>
-                <input type="submit" class="text-black" value="Sign up" name="signup" />
+
+                <div class="text-sm text-red-400">@Html.Raw(Model.Message)</div>
+
+                <button type="submit" class="text-black">Sign up</button>
             </form>
         </div>
     </div>
