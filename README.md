@@ -28,11 +28,10 @@ Link App [carquiz.weback1609.io.vn](https://carquiz.weback1609.io.vn/)
 ## Installation
 ### Run with Docker
 
-You can launch the published Docker image together with a SQL Server instance by using the provided `docker-compose.yml` and `.env` template.
+You can launch the published Docker image together with a SQL Server instance by using the provided [docker-compose.yml](https://github.com/huybach1609/QuizCarLicense/blob/main/docker-compose.yml) and [.env](https://github.com/huybach1609/QuizCarLicense/blob/main/sample%20(env)) template.
 
 1. Copy the sample environment file and adjust the values for your environment (especially the passwords and data paths):
 
-File: []()
    ```bash
    cp .env\(sample\) .env
    # edit .env
