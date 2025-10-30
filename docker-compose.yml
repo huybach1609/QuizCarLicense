@@ -1,15 +1,55 @@
-services:
-  app:
-    image: quizcarlicense:latest
-    environment:
-      - DOTNET_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:6789
-      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
-      - ConnectionStrings__Default=server=db.homelab.local,1433;database=QuizCarLicense;uid=sa;pwd=5Z#6G%te;TrustServerCertificate=True
-      - ConnectionStrings__Dev=server=db.homelab.local,1433;database=QuizCarLicense;uid=sa;pwd=5Z#6G%te;TrustServerCertificate=True
-    ports:
-      - "6789:6789"   
-    networks: [web]
+version: "3.9"
 
+# ===========================
+# 📘 QuizCarLicense Stack
+# ===========================
+services:
+  # ================= MSSQL Database =================
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      SA_PASSWORD: "${SA_PASSWORD}"
+      MSSQL_AGENT_ENABLED: "true"
+      TZ: "${TZ:-Asia/Ho_Chi_Minh}"
+    ports:
+      - "1433:1433"
+    volumes:
+      - "${MSSQL_DATA_ROOT}/data:/var/opt/mssql"
+      - "${MSSQL_DATA_ROOT}/backups:/var/opt/mssql/backups"
+      - "${MSSQL_DATA_ROOT}/logs:/var/opt/mssql/logs"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'cat </dev/null >/dev/tcp/127.0.0.1/1433'"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-network
+
+  # ================= QuizCarLicense API =================
+  quizcarlicense:
+    image: weback1609/quizcarlicense:latest
+    container_name: quizcarlicense
+    restart: unless-stopped
+    depends_on:
+      mssql:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS: "http://+:6789"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      TZ: "${TZ:-Asia/Ho_Chi_Minh}"
+      ConnectionStrings__Default: "${QUIZCAR_CONNECTION_DEFAULT}"
+      ConnectionStrings__Dev: "${QUIZCAR_CONNECTION_DEV}"
+    ports:
+      - "6789:6789"
+    networks:
+      - app-network
+
+# ================= Networks =================
 networks:
-  web: {}
+  app-network:
+    driver: bridge

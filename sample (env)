@@ -1,0 +1,10 @@
+# Timezone
+TZ=Asia/Ho_Chi_Minh
+
+# SQL Server settings
+SA_PASSWORD=StrongPassword123!
+MSSQL_DATA_ROOT=/opt/mssql
+
+# Connection strings (example)
+QUIZCAR_CONNECTION_DEFAULT=Server=mssql,1433;Database=QuizCarLicense;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True;
+QUIZCAR_CONNECTION_DEV=Server=mssql,1433;Database=QuizCarLicense_Dev;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True;

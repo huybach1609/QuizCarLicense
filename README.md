@@ -1,4 +1,4 @@
-﻿# QuizCarLicense
+# QuizCarLicense
 
 ## Overview
 QuizCarLicense is an ASP.NET Core Razor Pages application designed to help Vietnamese drivers practice for the national car license exam. The site delivers multiple-choice quizzes drawn from the official question bank, tracks user progress, and highlights areas that need more study.
@@ -6,15 +6,16 @@ QuizCarLicense is an ASP.NET Core Razor Pages application designed to help Vietn
 ## Features
 - 🇻🇳 **Localized question bank** sourced from the official Vietnamese driving exam material.
 - 📝 **Practice quizzes** with instant feedback for each answer.
-- 📊 **Progress tracking** so learners can monitor strengths and weaknesses.
-- 🔁 **Category-based review** to focus on specific topics (traffic signs, theory, situational awareness, etc.).
-- 📱 **Responsive UI** built with Razor Pages and Bootstrap for desktop and mobile users.
+- 📊 **History tracking**
+- 📱 **Responsive UI** built with Razor Pages and Tailwind CSS for desktop and mobile users.
 
 ## Tech Stack
 - [.NET 8](https://dotnet.microsoft.com/) with ASP.NET Core Razor Pages
 - Entity Framework Core for data access
 - SQL Server (local or Azure) as the backing database
 - Docker & Docker Compose for containerized deployments
+
+Link App [carquiz.weback1609.io.vn](https://carquiz.weback1609.io.vn/)
 
 ## Getting Started
 ### Prerequisites
@@ -23,34 +24,15 @@ QuizCarLicense is an ASP.NET Core Razor Pages application designed to help Vietn
 - Node.js & npm (for building static assets if you extend the front-end)
 - Docker (optional, for containerized workflows)
 
-### Clone the Repository
-```bash
-git clone https://github.com/<your-account>/QuizCarLicense.git
-cd QuizCarLicense
-```
 
-### Configure Environment
-1. Copy the sample settings file:
-   ```bash
-   cp appsettings.json appsettings.Development.json
-   ```
-2. Update connection strings and other secrets in `appsettings.Development.json`.
-3. Apply database migrations:
-   ```bash
-   dotnet ef database update
-   ```
-
-### Run the Application
-```bash
-dotnet watch run
-```
-The site will be available at `https://localhost:5001` (or the port printed in the console).
-
+## Installation
 ### Run with Docker
 
 You can launch the published Docker image together with a SQL Server instance by using the provided `docker-compose.yml` and `.env` template.
 
 1. Copy the sample environment file and adjust the values for your environment (especially the passwords and data paths):
+
+File: []()
    ```bash
    cp .env\(sample\) .env
    # edit .env
@@ -71,6 +53,29 @@ docker compose build
 docker compose up -d
 ```
 This will build the application image and use it in place of the published image.
+### Clone the Repository
+```bash
+git clone https://github.com/huybach1609/QuizCarLicense.git
+cd QuizCarLicense
+```
+
+### Configure Environment
+1. Copy the sample settings file:
+   ```bash
+   cp appsettings.json appsettings.Development.json
+   ```
+2. Update connection strings and other secrets in `appsettings.Development.json`.
+3. Apply database migrations:
+   ```bash
+   dotnet ef database update
+   ```
+
+### Run the Application
+```bash
+dotnet watch run
+```
+The site will be available at `https://localhost:5001` (or the port printed in the console).
+
 
 ## Testing
 ```bash
@@ -103,5 +108,5 @@ Please follow the existing coding conventions and run the test suite before subm
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
-- **Project Maintainer**: Your Name – <you@example.com>
-- **Project Link**: https://github.com/<your-account>/QuizCarLicense
+- **Project Maintainer**: Huy Bach – <bachlh03@gmail.com>
+- **Project Link**: https://github.com/huybach1609/QuizCarLicense
