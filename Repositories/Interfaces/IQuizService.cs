@@ -1,5 +1,4 @@
-﻿using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using QuizCarLicense.Models;
+﻿using QuizCarLicense.Models;
 
 namespace QuizCarLicense.Repositories.Interfaces
 {

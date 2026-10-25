@@ -26,20 +26,33 @@ namespace QuizCarLicense.Pages.Auth
         public string Message { get; set; } = "";
         public string Message1 { get; set; } = "";
 
-        public void OnGet(int status)
+        public async Task<IActionResult> OnGetAsync(int status, string? message = null)
         {
+            if (!await _authService.HasAdminAsync())
+            {
+                return RedirectToPage("/Auth/SetupAdmin");
+            }
 
             if (User.Identity != null && User.Identity.IsAuthenticated)
-                Response.Redirect("/Index");
+                return RedirectToPage("/Index");
 
-            if (status == 1)
+            if (!string.IsNullOrEmpty(message))
+                Message = message;
+            else if (status == 1)
                 Message = "You must have account to perform this";
             else if (status == 0)
                 Message = "";
+
+            return Page();
         }
 
         public async Task<IActionResult> OnPostLogin()
         {
+            if (!await _authService.HasAdminAsync())
+            {
+                return RedirectToPage("/Auth/SetupAdmin");
+            }
+
             // Manually retrieve the input values from the form
             string? email = Request.Form["email"];
             string? password = Request.Form["password"];

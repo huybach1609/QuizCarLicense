@@ -1,10 +1,13 @@
 # Timezone
 TZ=Asia/Ho_Chi_Minh
 
-# SQL Server settings
-SA_PASSWORD=StrongPassword123!
-MSSQL_DATA_ROOT=/opt/mssql
+# PostgreSQL settings
+POSTGRES_DB=quizcarlicense
+POSTGRES_USER=devuser
+POSTGRES_PASSWORD=123456
+POSTGRES_PORT=5432
+# POSTGRES_DATA_PATH=/opt/postgres/data
 
-# Connection strings (example)
-QUIZCAR_CONNECTION_DEFAULT=Server=mssql,1433;Database=QuizCarLicense;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True;
-QUIZCAR_CONNECTION_DEV=Server=mssql,1433;Database=QuizCarLicense_Dev;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True;
+# Connection strings (example for container network)
+QUIZCAR_CONNECTION_DEFAULT=Host=postgres;Port=5432;Database=quizcarlicense;Username=devuser;Password=123456
+QUIZCAR_CONNECTION_DEV=Host=postgres;Port=5432;Database=quizcarlicense;Username=devuser;Password=123456

@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
     {
         var conn = cfg.GetConnectionString(env.IsDevelopment() ? "Dev" : "Default");
         services.AddDbContext<QuizCarLicenseContext>(opt =>
-            opt.UseSqlServer(conn));
+            opt.UseNpgsql(conn));
 
         services.AddHealthChecks()
             .AddDbContextCheck<QuizCarLicenseContext>("db");

@@ -1,5 +1,4 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.Identity.Client;
 using QuizCarLicense.DTOs;
 using QuizCarLicense.DTOs.Auth;
 using QuizCarLicense.Models;
@@ -27,6 +26,16 @@ namespace QuizCarLicense.Repositories.Interfaces
         /// </summary>
         /// <returns>Logout result.</returns>
         public MessageReturn Logout();
+
+        /// <summary>
+        /// Checks if an administrator account already exists.
+        /// </summary>
+        public Task<bool> HasAdminAsync();
+
+        /// <summary>
+        /// Creates the initial administrator account.
+        /// </summary>
+        public Task<MessageReturn> CreateAdminAsync(CreateUserRequest request);
 
     }
 }

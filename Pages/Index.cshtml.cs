@@ -10,23 +10,23 @@ namespace QuizCarLicense.Pages
     public class IndexModel : PageModel
     {
         private readonly ILogger<IndexModel> _logger;
-
         private readonly ITakeService _takeService;
+        private readonly IQuizService _quizService;
 
-        public IndexModel(ILogger<IndexModel> logger, ITakeService takeService)
+        public IndexModel(ILogger<IndexModel> logger, ITakeService takeService, IQuizService quizService)
         {
             _logger = logger;
             _takeService = takeService;
+            _quizService = quizService;
         }
 
         public List<Models.Take> ListTake { get; set; } = new List<Models.Take>();
         public List<CardQuiz> ListCard { get; set; } = new();
         public bool IsLogin { get; private set; }
 
-
         public async Task<IActionResult> OnGetAsync(CancellationToken ct)
         {
-            LoadListQuiz();
+            await LoadListQuizAsync(ct);
 
             bool IsLogin = User?.Identity?.IsAuthenticated == true;
 
@@ -54,21 +54,48 @@ namespace QuizCarLicense.Pages
 
             return Page();
         }
-        public void LoadListQuiz()
+
+        public async Task LoadListQuizAsync(CancellationToken ct = default)
         {
+            try
+            {
+                var quizzes = await _quizService.GetAllAsync(ct);
+                var diemLietQuiz = quizzes.FirstOrDefault(q => q.Title.Contains("điểm liệt"));
+                var saiNhieuQuiz = quizzes.FirstOrDefault(q => q.Title.Contains("sai nhiều"));
 
-            ListCard = new() {
-                  new() { Title = "Ôn tập câu điểm liệt",  Url ="/Quiz/Detail?id=2003&handler=ShowDetails" ,
-                    Icon = SvgIcons.BoxIcon
-                  },
-                  new() { Title = "Câu hỏi bị sai nhiều",  Url ="/Quiz/Detail?id=2003&handler=ShowDetails" ,
-                      Icon =SvgIcons.BoxCheck
-                  },
-                  new() { Title = "Thi thử bộ đề tạo sẵn",  Url="/Quiz" ,
-                      Icon =SvgIcons.StackIcon
-                  }
-            };
+                var diemLietUrl = diemLietQuiz != null 
+                    ? $"/Quiz/Detail?id={diemLietQuiz.QuizId}&handler=ShowDetails" 
+                    : "/Quiz";
+                var saiNhieuUrl = saiNhieuQuiz != null 
+                    ? $"/Quiz/Detail?id={saiNhieuQuiz.QuizId}&handler=ShowDetails" 
+                    : "/Quiz";
 
+                ListCard = new() {
+                    new() { 
+                        Title = "Ôn tập câu điểm liệt",  
+                        Url = diemLietUrl,
+                        Icon = SvgIcons.BoxIcon
+                    },
+                    new() { 
+                        Title = "Câu hỏi bị sai nhiều",  
+                        Url = saiNhieuUrl,
+                        Icon = SvgIcons.BoxCheck
+                    },
+                    new() { 
+                        Title = "Thi thử bộ đề tạo sẵn",  
+                        Url = "/Quiz",
+                        Icon = SvgIcons.StackIcon
+                    }
+                };
+            }
+            catch
+            {
+                ListCard = new() {
+                    new() { Title = "Ôn tập câu điểm liệt", Url = "/Quiz", Icon = SvgIcons.BoxIcon },
+                    new() { Title = "Câu hỏi bị sai nhiều", Url = "/Quiz", Icon = SvgIcons.BoxCheck },
+                    new() { Title = "Thi thử bộ đề tạo sẵn", Url = "/Quiz", Icon = SvgIcons.StackIcon }
+                };
+            }
         }
     }
 }

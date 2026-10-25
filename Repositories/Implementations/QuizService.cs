@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
 using QuizCarLicense.Constrains;
 using QuizCarLicense.Models;
@@ -18,8 +18,8 @@ namespace QuizCarLicense.Repositories.Implementations
         public async Task<List<Quiz>> GetAllAsync(CancellationToken ct = default)
         {
             return await _context.Quizzes
-                .Include(q=> q.User)
-                .Where(q => q.User.Role == UserRole.Admin.ToString())
+                .Include(q => q.User)
+                .Where(q => q.UserId == null || (q.User != null && q.User.Role == UserRole.Admin.ToString()))
                 .AsNoTracking()
                 .OrderByDescending(q => q.UpdatedAt)
                 .ToListAsync(ct);

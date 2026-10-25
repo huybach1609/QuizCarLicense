@@ -40,11 +40,11 @@ public partial class QuizCarLicenseContext : DbContext
             entity.ToTable("Quiz");
 
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp with time zone");
             entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp with time zone");
 
             entity.HasOne(d => d.User).WithMany(p => p.Quizzes)
                 .HasForeignKey(d => d.UserId)
@@ -86,11 +86,11 @@ public partial class QuizCarLicenseContext : DbContext
             entity.ToTable("QuizQuestion");
 
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp with time zone");
             entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp with time zone");
         });
 
         modelBuilder.Entity<Take>(entity =>
@@ -99,8 +99,8 @@ public partial class QuizCarLicenseContext : DbContext
 
             entity.ToTable("Take");
 
-            entity.Property(e => e.FinishedAt).HasColumnType("datetime");
-            entity.Property(e => e.StartedAt).HasColumnType("datetime");
+            entity.Property(e => e.FinishedAt).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.StartedAt).HasColumnType("timestamp with time zone");
 
             entity.HasOne(d => d.Quiz).WithMany(p => p.Takes)
                 .HasForeignKey(d => d.QuizId)

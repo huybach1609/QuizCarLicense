@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using QuizCarLicense.Constrains;
 using QuizCarLicense.DTOs;
@@ -75,6 +75,61 @@ namespace QuizCarLicense.Repositories.Implementations
             return new MessageReturn
             {
                 Message = "Signup successful",
+                Result = true
+            };
+        }
+
+        public async Task<bool> HasAdminAsync()
+        {
+            return await _context.Users.AnyAsync(u => u.Role == UserRole.Admin.ToString());
+        }
+
+        public async Task<MessageReturn> CreateAdminAsync(CreateUserRequest request)
+        {
+            if (await HasAdminAsync())
+            {
+                return new MessageReturn
+                {
+                    Message = "An administrator account already exists.",
+                    Result = false
+                };
+            }
+
+            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(request.UserName));
+            if (userDb != null)
+            {
+                return new MessageReturn
+                {
+                    Message = "UserName already exists",
+                    Result = false
+                };
+            }
+
+            Models.User user = new()
+            {
+                Username = request.UserName,
+                FullName = request.FullName,
+                Password = StringUtils.ComputeSha256Hash(request.Password),
+                Role = UserRole.Admin.ToString()
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            // Link any pre-seeded quizzes that have no owner to this admin
+            var unassignedQuizzes = await _context.Quizzes.Where(q => q.UserId == null).ToListAsync();
+            if (unassignedQuizzes.Count != 0)
+            {
+                foreach (var quiz in unassignedQuizzes)
+                {
+                    quiz.UserId = user.UserId;
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return new MessageReturn
+            {
+                Message = "Admin account created successfully.",
                 Result = true
             };
         }

@@ -5,6 +5,7 @@ using QuizCarLicense.Models;
 using QuizCarLicense.Repositories.Implementations;
 using QuizCarLicense.Repositories.Interfaces;
 using QuizCarLicense.Extensions;
+using QuizCarLicense.Utils;
 
 //var builder = WebApplication.CreateBuilder(args);
 
@@ -90,6 +91,13 @@ builder.Services.AddPolicies();
 
 
 var app = builder.Build();
+
+// initial data seed when start 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<QuizCarLicenseContext>();
+    await DbInitializer.SeedAsync(context);
+}
 
 app.ConfigurePipeline(app.Environment);
 app.MapRazorPages();

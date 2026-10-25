@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model QuizCarLicense.Pages.Auth.LoginModel
 @{
     ViewData["Title"] = "Login page";
@@ -19,9 +19,12 @@
 <div class="contain flex items-center justify-evenly">
     <div class="@containerCss">
         <div class="@formContainerCss">
-            <div class="mx-auto text-sm font-bold leading-tight tracking-tight text-red-500 dark:text-white md:text-2xl">
-                @Model.Message
-            </div>
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <div class="p-3 text-sm rounded-lg @(Model.Message.Contains("successfully") ? "text-green-800 bg-green-50 dark:bg-gray-800 dark:text-green-400 border border-green-200" : "text-red-500 font-bold")">
+                    @Model.Message
+                </div>
+            }
 
             <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white md:text-2xl">
                 Sign in to your account

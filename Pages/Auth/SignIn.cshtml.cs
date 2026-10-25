@@ -18,9 +18,22 @@ namespace QuizCarLicense.Pages.Auth
             _authService = authService;
         }
 
-        public void OnGet() { }
+        public async Task<IActionResult> OnGetAsync()
+        {
+            if (!await _authService.HasAdminAsync())
+            {
+                return RedirectToPage("/Auth/SetupAdmin");
+            }
+            return Page();
+        }
+
         public async Task<IActionResult> OnPostSignUpAsync()
         {
+            if (!await _authService.HasAdminAsync())
+            {
+                return RedirectToPage("/Auth/SetupAdmin");
+            }
+
             if (!ModelState.IsValid)
             {
                 Message = string.Join("<br>",

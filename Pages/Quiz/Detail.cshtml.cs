@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Identity.Client;
 using QuizCarLicense.Repositories.Interfaces;
 
 namespace QuizCarLicense.Pages.Quiz
