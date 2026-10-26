@@ -48,13 +48,26 @@ namespace QuizCarLicense.Repositories.Implementations
             var list = await _context.Quizzes
                 .AsNoTracking()
                 .Where(q => q.UserId == null || (q.User != null && q.User.Role == UserRole.Admin.ToString()))
-                .OrderByDescending(q => q.UpdatedAt)
+                .OrderBy(q => q.LicenseClass != null ? q.LicenseClass.DisplayOrder : 99)
+                .ThenBy(q => q.ExamNumber ?? 99)
+                .ThenByDescending(q => q.UpdatedAt)
                 .Select(q => new QuizSummaryResponse(
                     q.QuizId,
                     q.Title,
                     q.Detail ?? string.Empty,
-                    q.Questions.Count,
-                    q.UpdatedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(q.UpdatedAt.Value, DateTimeKind.Utc)) : null))
+                    q.QuizType == QuizTypes.RandomTemplate && q.LicenseClass != null
+                        ? q.LicenseClass.TotalQuestions
+                        : q.Questions.Count,
+                    q.UpdatedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(q.UpdatedAt.Value, DateTimeKind.Utc)) : null,
+                    q.LicenseClass != null ? q.LicenseClass.Code : null,
+                    q.LicenseClass != null ? q.LicenseClass.Name : null,
+                    q.QuizType,
+                    q.ExamNumber,
+                    q.DurationMinutes,
+                    q.PassScore,
+                    q.QuizType == QuizTypes.ChapterPractice
+                        || q.QuizType == QuizTypes.CriticalPractice
+                        || q.QuizType == QuizTypes.FrequentMistakes))
                 .ToListAsync(ct);
 
             _cache.Set(CacheKeyPublicSummaries, list, TimeSpan.FromMinutes(15));

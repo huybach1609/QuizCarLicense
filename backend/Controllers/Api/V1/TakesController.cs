@@ -95,18 +95,32 @@ public sealed class TakesController : ControllerBase
             q.Image,
             q.Status,
             q.AnswerId,
-            q.Answers.Select(a => new GradedAnswerOptionResponse(a.Id, a.Content, a.IsCorrect)).ToList()
+            q.Answers.Select(a => new GradedAnswerOptionResponse(a.Id, a.Content, a.IsCorrect)).ToList(),
+            q.IsCritical,
+            q.Explanation
         )).ToList();
+
+        int totalQuestions = take.TotalQuestions > 0 ? take.TotalQuestions : gradedQuestions.Count;
+        int passScore = take.PassScore > 0 ? take.PassScore : (take.Quiz?.PassScore ?? 27);
+        bool hasCriticalError = take.HasCriticalError || gradedQuestions.Any(q => q.IsCritical && q.Status != QuestionStatus.TRUE);
+        bool isPractice = QuizTypes.IsPractice(take.Quiz?.QuizType);
+        bool isPassed = take.TotalQuestions > 0
+            ? take.IsPassed
+            : (isPractice ? take.Score >= passScore : (take.Score >= passScore && !hasCriticalError));
 
         var response = new TakeDetailResponse(
             take.TakeId,
             take.QuizId ?? 0,
             take.Quiz?.Title ?? "Không có tiêu đề",
             take.Score,
-            gradedQuestions.Count,
+            totalQuestions,
             new DateTimeOffset(DateTime.SpecifyKind(take.StartedAt, DateTimeKind.Utc)),
             take.FinishedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(take.FinishedAt.Value, DateTimeKind.Utc)) : null,
-            gradedQuestions);
+            gradedQuestions,
+            PassScore: passScore,
+            IsPassed: isPassed,
+            HasCriticalError: hasCriticalError,
+            LicenseClassCode: take.Quiz?.LicenseClass?.Code);
 
         return Ok(response);
     }

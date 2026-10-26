@@ -44,7 +44,7 @@ namespace QuizCarLicense.Repositories.Implementations
                     TakeId = t.TakeId,
                     QuizId = t.QuizId ?? 0,
                     QuizTitle = t.Quiz != null ? t.Quiz.Title : "No Title",
-                    TotalQuestions = t.Quiz != null ? t.Quiz.Questions.Count : 0,
+                    TotalQuestions = t.TotalQuestions > 0 ? t.TotalQuestions : (t.Quiz != null ? t.Quiz.Questions.Count : 0),
                     Score = t.Score,
                     StartedAt = t.StartedAt,
                     FinishedAt = t.FinishedAt
@@ -73,9 +73,13 @@ namespace QuizCarLicense.Repositories.Implementations
                     t.QuizId ?? 0,
                     t.Quiz != null ? t.Quiz.Title : "No Title",
                     t.Score,
-                    t.Quiz != null ? t.Quiz.Questions.Count : 0,
+                    t.TotalQuestions > 0 ? t.TotalQuestions : (t.Quiz != null ? t.Quiz.Questions.Count : 0),
                     new DateTimeOffset(DateTime.SpecifyKind(t.StartedAt, DateTimeKind.Utc)),
-                    t.FinishedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(t.FinishedAt.Value, DateTimeKind.Utc)) : null))
+                    t.FinishedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(t.FinishedAt.Value, DateTimeKind.Utc)) : null,
+                    t.PassScore > 0 ? t.PassScore : (t.Quiz != null ? t.Quiz.PassScore : 27),
+                    t.IsPassed,
+                    t.HasCriticalError,
+                    t.Quiz != null && t.Quiz.LicenseClass != null ? t.Quiz.LicenseClass.Code : null))
                 .ToListAsync(ct);
 
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -92,6 +96,8 @@ namespace QuizCarLicense.Repositories.Implementations
                 .AsNoTracking()
                 .Include(t => t.Quiz)
                     .ThenInclude(q => q!.User)
+                .Include(t => t.Quiz)
+                    .ThenInclude(q => q!.LicenseClass)
                 .Include(t => t.TakeAnswers)
                     .ThenInclude(ta => ta.Answer)
                 .FirstOrDefaultAsync(t => t.TakeId == takeId, ct);
@@ -106,7 +112,12 @@ namespace QuizCarLicense.Repositories.Implementations
                 return new List<QuestionDTO>();
             }
 
-            // Tải danh sách tất cả câu hỏi của đề thi kèm đáp án (Tránh cycle Include)
+            var selectedAnswerIds = take.TakeAnswers
+                .Where(ta => ta.AnswerId.HasValue)
+                .Select(ta => ta.AnswerId!.Value)
+                .ToHashSet();
+
+            // Tải danh sách câu hỏi của đề thi kèm đáp án (Tránh cycle Include)
             var quizQuestions = await _context.QuizQuestions
                 .AsNoTracking()
                 .Where(q => q.Quizzes.Any(qz => qz.QuizId == take.QuizId.Value))
@@ -114,19 +125,22 @@ namespace QuizCarLicense.Repositories.Implementations
                 .OrderBy(q => q.QuestionId)
                 .ToListAsync(ct);
 
-            // Tập hợp ID các đáp án đã chọn trong lượt thi này
-            var selectedAnswerIds = take.TakeAnswers
-                .Where(ta => ta.AnswerId.HasValue)
-                .Select(ta => ta.AnswerId!.Value)
-                .ToHashSet();
+            // Nếu là đề thi ngẫu nhiên (RandomTemplate không gắn câu hỏi cố định), lấy danh sách câu hỏi theo các câu đã trả lời
+            if (quizQuestions.Count == 0 && selectedAnswerIds.Count > 0)
+            {
+                quizQuestions = await _context.QuizQuestions
+                    .AsNoTracking()
+                    .Where(q => q.QuizAnswers.Any(qa => selectedAnswerIds.Contains(qa.AnswerId)))
+                    .Include(q => q.QuizAnswers)
+                    .OrderBy(q => q.QuestionId)
+                    .ToListAsync(ct);
+            }
 
             var result = new List<QuestionDTO>(quizQuestions.Count);
 
             foreach (var question in quizQuestions)
             {
-                // Tìm xem trong câu này, đáp án nào được chọn
                 var selectedAnswer = question.QuizAnswers.FirstOrDefault(qa => selectedAnswerIds.Contains(qa.AnswerId));
-                var correctAnswer = question.QuizAnswers.FirstOrDefault(qa => qa.IsCorrect);
 
                 QuestionStatus status = QuestionStatus.NOTFINISH;
                 int? answerId = null;
@@ -142,6 +156,8 @@ namespace QuizCarLicense.Repositories.Implementations
                     Id = question.QuestionId,
                     Content = question.Content,
                     Image = question.Image,
+                    IsCritical = question.IsCritical,
+                    Explanation = question.Explanation,
                     Status = status,
                     AnswerId = answerId,
                     Answers = question.QuizAnswers.Select(qa => new AnswerDTO

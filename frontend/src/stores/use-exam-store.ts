@@ -6,15 +6,21 @@ export interface ActiveExamSession {
   quizId: number;
   quizTitle: string;
   startTime: string; // ISO 8601
-  durationSeconds: number; // 19 phút = 1140 giây
+  durationSeconds: number;
   selectedAnswers: Record<number, number>; // questionId -> answerId
   flaggedQuestionIds: number[];
   currentIndex: number;
+  questionIds?: number[];
 }
 
 interface ExamStoreState {
   currentSession: ActiveExamSession | null;
-  startSession: (quizId: number, quizTitle: string, durationMinutes?: number) => void;
+  startSession: (
+    quizId: number,
+    quizTitle: string,
+    durationMinutes?: number,
+    questionIds?: number[]
+  ) => void;
   selectAnswer: (questionId: number, answerId: number) => void;
   toggleFlag: (questionId: number) => void;
   setCurrentIndex: (index: number) => void;
@@ -26,7 +32,12 @@ export const useExamStore = create<ExamStoreState>()(
     (set, get) => ({
       currentSession: null,
 
-      startSession: (quizId: number, quizTitle: string, durationMinutes = 19) => {
+      startSession: (
+        quizId: number,
+        quizTitle: string,
+        durationMinutes = 20,
+        questionIds?: number[]
+      ) => {
         const existing = get().currentSession;
         // Nếu đã có session đang chạy của đúng quiz này, giữ nguyên để không mất bài
         if (existing && existing.quizId === quizId) {
@@ -42,6 +53,7 @@ export const useExamStore = create<ExamStoreState>()(
           selectedAnswers: {},
           flaggedQuestionIds: [],
           currentIndex: 0,
+          questionIds,
         };
 
         set({ currentSession: newSession });

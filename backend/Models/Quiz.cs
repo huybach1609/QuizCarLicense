@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace QuizCarLicense.Models;
@@ -16,6 +16,22 @@ public partial class Quiz
     public DateTime? UpdatedAt { get; set; }
 
     public int? UserId { get; set; }
+
+    public int? LicenseClassId { get; set; }
+
+    public int? CategoryId { get; set; }
+
+    public string QuizType { get; set; } = "OfficialExam";
+
+    public int? ExamNumber { get; set; }
+
+    public int DurationMinutes { get; set; } = 20;
+
+    public int PassScore { get; set; } = 27;
+
+    public virtual LicenseClass? LicenseClass { get; set; }
+
+    public virtual QuestionCategory? Category { get; set; }
 
     public virtual ICollection<Take> Takes { get; set; } = new List<Take>();
 

@@ -22,6 +22,134 @@ namespace QuizCarLicense.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LicenseClassQuizQuestion", b =>
+                {
+                    b.Property<int>("LicenseClassId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("LicenseClassId", "QuestionId");
+
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("LicenseClass_QuizQuestion", (string)null);
+                });
+
+            modelBuilder.Entity("QuizCarLicense.Models.LicenseClass", b =>
+                {
+                    b.Property<int>("LicenseClassId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LicenseClassId"));
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("PassScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalQuestions")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VehicleGroup")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("LicenseClassId");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_LicenseClass_Code");
+
+                    b.ToTable("LicenseClass", (string)null);
+                });
+
+            modelBuilder.Entity("QuizCarLicense.Models.LicenseExamMatrix", b =>
+                {
+                    b.Property<int>("MatrixId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MatrixId"));
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsCriticalPool")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LicenseClassId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QuestionCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("MatrixId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("LicenseClassId");
+
+                    b.ToTable("LicenseExamMatrix", (string)null);
+                });
+
+            modelBuilder.Entity("QuizCarLicense.Models.QuestionCategory", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoryId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("CategoryId");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_QuestionCategory_Code");
+
+                    b.ToTable("QuestionCategory", (string)null);
+                });
+
             modelBuilder.Entity("QuizCarLicense.Models.Quiz", b =>
                 {
                     b.Property<int>("QuizId")
@@ -30,6 +158,9 @@ namespace QuizCarLicense.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("QuizId"));
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -37,6 +168,29 @@ namespace QuizCarLicense.Migrations
 
                     b.Property<string>("Detail")
                         .HasColumnType("text");
+
+                    b.Property<int>("DurationMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(20);
+
+                    b.Property<int?>("ExamNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("LicenseClassId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PassScore")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(27);
+
+                    b.Property<string>("QuizType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("OfficialExam");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -53,7 +207,12 @@ namespace QuizCarLicense.Migrations
                     b.HasKey("QuizId")
                         .HasName("PK__Quiz__8B42AE8E620FF1EE");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("UserId");
+
+                    b.HasIndex("LicenseClassId", "QuizType", "ExamNumber")
+                        .HasDatabaseName("IX_Quiz_LicenseClass_QuizType");
 
                     b.ToTable("Quiz", (string)null);
                 });
@@ -96,6 +255,9 @@ namespace QuizCarLicense.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
@@ -105,8 +267,14 @@ namespace QuizCarLicense.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("Explanation")
+                        .HasColumnType("text");
+
                     b.Property<string>("Image")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsCritical")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Score")
                         .HasColumnType("integer");
@@ -118,6 +286,9 @@ namespace QuizCarLicense.Migrations
 
                     b.HasKey("QuestionId")
                         .HasName("PK__QuizQues__0DC06FAC8878AD90");
+
+                    b.HasIndex("CategoryId", "IsCritical")
+                        .HasDatabaseName("IX_QuizQuestion_Category_IsCritical");
 
                     b.ToTable("QuizQuestion", (string)null);
                 });
@@ -133,6 +304,15 @@ namespace QuizCarLicense.Migrations
                     b.Property<DateTime?>("FinishedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("HasCriticalError")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPassed")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PassScore")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("QuizId")
                         .HasColumnType("integer");
 
@@ -143,6 +323,9 @@ namespace QuizCarLicense.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalQuestions")
                         .HasColumnType("integer");
 
                     b.Property<int?>("UserId")
@@ -235,13 +418,60 @@ namespace QuizCarLicense.Migrations
                     b.ToTable("Quiz_QuizQuestion", (string)null);
                 });
 
+            modelBuilder.Entity("LicenseClassQuizQuestion", b =>
+                {
+                    b.HasOne("QuizCarLicense.Models.LicenseClass", null)
+                        .WithMany()
+                        .HasForeignKey("LicenseClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("QuizCarLicense.Models.QuizQuestion", null)
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("QuizCarLicense.Models.LicenseExamMatrix", b =>
+                {
+                    b.HasOne("QuizCarLicense.Models.QuestionCategory", "Category")
+                        .WithMany("ExamMatrices")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("QuizCarLicense.Models.LicenseClass", "LicenseClass")
+                        .WithMany("ExamMatrices")
+                        .HasForeignKey("LicenseClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("LicenseClass");
+                });
+
             modelBuilder.Entity("QuizCarLicense.Models.Quiz", b =>
                 {
+                    b.HasOne("QuizCarLicense.Models.QuestionCategory", "Category")
+                        .WithMany("Quizzes")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("QuizCarLicense.Models.LicenseClass", "LicenseClass")
+                        .WithMany("Quizzes")
+                        .HasForeignKey("LicenseClassId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("QuizCarLicense.Models.User", "User")
                         .WithMany("Quizzes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("FK__Quiz__UserId__3B75D760");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("LicenseClass");
 
                     b.Navigation("User");
                 });
@@ -255,6 +485,16 @@ namespace QuizCarLicense.Migrations
                         .HasConstraintName("FK__QuizAnswe__Quest__45F365D3");
 
                     b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("QuizCarLicense.Models.QuizQuestion", b =>
+                {
+                    b.HasOne("QuizCarLicense.Models.QuestionCategory", "Category")
+                        .WithMany("Questions")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("QuizCarLicense.Models.Take", b =>
@@ -309,6 +549,22 @@ namespace QuizCarLicense.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK__Quiz_Quiz__QuizI__4222D4EF");
+                });
+
+            modelBuilder.Entity("QuizCarLicense.Models.LicenseClass", b =>
+                {
+                    b.Navigation("ExamMatrices");
+
+                    b.Navigation("Quizzes");
+                });
+
+            modelBuilder.Entity("QuizCarLicense.Models.QuestionCategory", b =>
+                {
+                    b.Navigation("ExamMatrices");
+
+                    b.Navigation("Questions");
+
+                    b.Navigation("Quizzes");
                 });
 
             modelBuilder.Entity("QuizCarLicense.Models.Quiz", b =>

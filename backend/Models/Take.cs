@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace QuizCarLicense.Models;
@@ -12,6 +12,14 @@ public partial class Take
     public int? UserId { get; set; }
 
     public int Score { get; set; }
+
+    public int TotalQuestions { get; set; }
+
+    public int PassScore { get; set; }
+
+    public bool IsPassed { get; set; }
+
+    public bool HasCriticalError { get; set; }
 
     public int Status { get; set; }
 

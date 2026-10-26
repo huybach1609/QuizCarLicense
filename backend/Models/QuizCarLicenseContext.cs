@@ -27,6 +27,12 @@ public partial class QuizCarLicenseContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<LicenseClass> LicenseClasses { get; set; }
+
+    public virtual DbSet<QuestionCategory> QuestionCategories { get; set; }
+
+    public virtual DbSet<LicenseExamMatrix> LicenseExamMatrices { get; set; }
+
 //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
 //        => optionsBuilder.UseSqlServer("server =192.168.55.220,1433;database=QuizCarLicense;uid=sa;pwd=5Z#6G%te;TrustServerCertificate=True");
@@ -46,10 +52,29 @@ public partial class QuizCarLicenseContext : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp with time zone");
 
+            entity.Property(e => e.QuizType)
+                .HasMaxLength(50)
+                .HasDefaultValue("OfficialExam");
+            entity.Property(e => e.DurationMinutes)
+                .HasDefaultValue(20);
+            entity.Property(e => e.PassScore)
+                .HasDefaultValue(27);
+
+            entity.HasIndex(e => new { e.LicenseClassId, e.QuizType, e.ExamNumber })
+                .HasDatabaseName("IX_Quiz_LicenseClass_QuizType");
+
             entity.HasOne(d => d.User).WithMany(p => p.Quizzes)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__Quiz__UserId__3B75D760");
+
+            entity.HasOne(d => d.LicenseClass).WithMany(p => p.Quizzes)
+                .HasForeignKey(d => d.LicenseClassId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.Category).WithMany(p => p.Quizzes)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasMany(d => d.Questions).WithMany(p => p.Quizzes)
                 .UsingEntity<Dictionary<string, object>>(
@@ -87,12 +112,71 @@ public partial class QuizCarLicenseContext : DbContext
 
             entity.ToTable("QuizQuestion");
 
+            entity.HasIndex(e => new { e.CategoryId, e.IsCritical })
+                .HasDatabaseName("IX_QuizQuestion_Category_IsCritical");
+
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp with time zone");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp with time zone");
+
+            entity.HasOne(d => d.Category).WithMany(p => p.Questions)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<LicenseClass>(entity =>
+        {
+            entity.HasKey(e => e.LicenseClassId);
+            entity.ToTable("LicenseClass");
+
+            entity.HasIndex(e => e.Code).IsUnique().HasDatabaseName("UX_LicenseClass_Code");
+
+            entity.Property(e => e.Code).HasMaxLength(20);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.VehicleGroup).HasMaxLength(30);
+
+            entity.HasMany(d => d.AllowedQuestions).WithMany(p => p.AllowedLicenseClasses)
+                .UsingEntity<Dictionary<string, object>>(
+                    "LicenseClassQuizQuestion",
+                    r => r.HasOne<QuizQuestion>().WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    l => l.HasOne<LicenseClass>().WithMany()
+                        .HasForeignKey("LicenseClassId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j =>
+                    {
+                        j.HasKey("LicenseClassId", "QuestionId");
+                        j.ToTable("LicenseClass_QuizQuestion");
+                    });
+        });
+
+        modelBuilder.Entity<QuestionCategory>(entity =>
+        {
+            entity.HasKey(e => e.CategoryId);
+            entity.ToTable("QuestionCategory");
+
+            entity.HasIndex(e => e.Code).IsUnique().HasDatabaseName("UX_QuestionCategory_Code");
+
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.Title).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<LicenseExamMatrix>(entity =>
+        {
+            entity.HasKey(e => e.MatrixId);
+            entity.ToTable("LicenseExamMatrix");
+
+            entity.HasOne(d => d.LicenseClass).WithMany(p => p.ExamMatrices)
+                .HasForeignKey(d => d.LicenseClassId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Category).WithMany(p => p.ExamMatrices)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Take>(entity =>

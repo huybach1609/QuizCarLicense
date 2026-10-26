@@ -37,11 +37,30 @@ export default function GuestResultPage() {
     );
   }
 
-  // Tiêu chuẩn sát hạch B2: >= 32/35 câu
-  const isPass = result.score >= Math.round(result.totalQuestions * 0.9);
+  // Xét đạt / không đạt theo chuẩn Thông tư 108/2026/TT-BCA
+  const passScore = result.passScore ?? Math.round(result.totalQuestions * 0.9);
+  const isPass =
+    result.isPassed !== undefined
+      ? result.isPassed
+      : result.score >= passScore && !result.hasCriticalError;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6 w-full">
+      {/* Banner Cảnh báo nghiêm trọng nếu sai câu điểm liệt */}
+      {result.hasCriticalError && (
+        <div className="p-4 rounded-lg bg-destructive/15 border-2 border-destructive text-destructive flex items-center gap-3">
+          <AlertTriangle className="w-6 h-6 shrink-0" />
+          <div className="flex flex-col">
+            <span className="font-bold text-sm sm:text-base">
+              KHÔNG ĐẠT DO TRẢ LỜI SAI CÂU HỎI ĐIỂM LIỆT!
+            </span>
+            <span className="text-xs sm:text-sm text-destructive/90">
+              Theo quy chuẩn sát hạch mới nhất (Thông tư 108/2026/TT-BCA), chỉ cần làm sai 01 câu điểm liệt thì toàn bộ bài thi sẽ bị đánh giá KHÔNG ĐẠT ngay lập tức.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Thẻ tổng kết điểm số */}
       <div
         className={`p-6 rounded-lg border flex flex-col sm:flex-row items-center justify-between gap-4 ${
@@ -64,7 +83,10 @@ export default function GuestResultPage() {
             >
               {isPass ? t("passed") : t("failed")}
             </span>
-            <span className="text-xs text-muted-foreground">{result.quizTitle}</span>
+            <span className="text-xs text-muted-foreground">
+              {result.quizTitle}
+              {result.licenseClassCode && ` • Hạng ${result.licenseClassCode}`}
+            </span>
           </div>
         </div>
 
@@ -73,7 +95,9 @@ export default function GuestResultPage() {
             <span className="text-2xl font-bold font-mono text-foreground tabular-nums">
               {result.score} / {result.totalQuestions}
             </span>
-            <span className="block text-[11px] text-muted-foreground">điểm số đạt được</span>
+            <span className="block text-[11px] text-muted-foreground">
+              Yêu cầu đạt: {passScore}/{result.totalQuestions} câu
+            </span>
           </div>
 
           <Link
@@ -115,9 +139,16 @@ export default function GuestResultPage() {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold font-mono text-muted-foreground tabular-nums">
-                    CÂU {idx + 1}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold font-mono text-muted-foreground tabular-nums">
+                      CÂU {idx + 1}
+                    </span>
+                    {q.isCritical && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-destructive text-destructive-foreground">
+                        CÂU ĐIỂM LIỆT
+                      </span>
+                    )}
+                  </div>
                   <span
                     className={`text-[11px] font-semibold px-2 py-0.5 rounded ${
                       isCorrect
@@ -145,6 +176,7 @@ export default function GuestResultPage() {
                       src={q.image}
                       alt={`Minh họa câu hỏi ${q.id}`}
                       fill
+                      sizes="(max-width: 640px) 100vw, 384px"
                       className="object-contain"
                     />
                   </div>
@@ -185,6 +217,14 @@ export default function GuestResultPage() {
                     );
                   })}
                 </div>
+
+                {/* Giải thích câu hỏi */}
+                {q.explanation && (
+                  <div className="p-2.5 rounded bg-muted/60 border border-border/60 text-xs text-muted-foreground mt-1">
+                    <span className="font-semibold text-foreground">💡 Giải thích: </span>
+                    {q.explanation}
+                  </div>
+                )}
               </div>
             );
           })}

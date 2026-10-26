@@ -7,6 +7,14 @@ const backendUrl = process.env.BACKEND_INTERNAL_URL || "http://localhost:5254";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  turbopack: {
+    rules: {
+      "*.css": {
+        loaders: ["@tailwindcss/turbopack"],
+        as: "*.css",
+      },
+    },
+  },
   images: {
     remotePatterns: [
       {

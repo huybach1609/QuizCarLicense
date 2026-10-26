@@ -6,7 +6,7 @@ const BACKEND_URL = process.env.BACKEND_INTERNAL_URL || "http://localhost:5254";
 export async function GET() {
   const token = await getAccessToken();
   if (!token) {
-    return NextResponse.json({ user: null }, { status: 401 });
+    return NextResponse.json({ user: null }, { status: 200 });
   }
 
   try {
@@ -15,7 +15,7 @@ export async function GET() {
     });
 
     if (!res.ok) {
-      return NextResponse.json({ user: null }, { status: res.status });
+      return NextResponse.json({ user: null }, { status: 200 });
     }
 
     const user = await res.json();

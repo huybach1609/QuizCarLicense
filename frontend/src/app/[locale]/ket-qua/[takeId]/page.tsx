@@ -3,7 +3,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { fetchApi, type GradedQuestion } from "@/lib/api-client";
-import { CheckCircle2, XCircle, RotateCcw, ArrowLeft, History } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, History, AlertTriangle } from "lucide-react";
 
 interface TakeDetailData {
   takeId: number;
@@ -13,6 +13,10 @@ interface TakeDetailData {
   totalQuestions: number;
   startedAt: string;
   finishedAt: string | null;
+  passScore?: number;
+  isPassed?: boolean;
+  hasCriticalError?: boolean;
+  licenseClassCode?: string | null;
   questions: GradedQuestion[];
 }
 
@@ -37,10 +41,29 @@ export default async function SavedResultPage({
     notFound();
   }
 
-  const isPass = take.score >= Math.round(take.totalQuestions * 0.9);
+  const passScore = take.passScore ?? Math.round(take.totalQuestions * 0.9);
+  const isPass =
+    take.isPassed !== undefined
+      ? take.isPassed
+      : take.score >= passScore && !take.hasCriticalError;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6 w-full">
+      {/* Banner Cảnh báo nghiêm trọng nếu sai câu điểm liệt */}
+      {take.hasCriticalError && (
+        <div className="p-4 rounded-lg bg-destructive/15 border-2 border-destructive text-destructive flex items-center gap-3">
+          <AlertTriangle className="w-6 h-6 shrink-0" />
+          <div className="flex flex-col">
+            <span className="font-bold text-sm sm:text-base">
+              KHÔNG ĐẠT DO TRẢ LỜI SAI CÂU HỎI ĐIỂM LIỆT!
+            </span>
+            <span className="text-xs sm:text-sm text-destructive/90">
+              Theo quy chuẩn sát hạch mới nhất (Thông tư 108/2026/TT-BCA), chỉ cần làm sai 01 câu điểm liệt thì toàn bộ bài thi sẽ bị đánh giá KHÔNG ĐẠT ngay lập tức.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Thẻ tổng kết điểm số */}
       <div
         className={`p-6 rounded-lg border flex flex-col sm:flex-row items-center justify-between gap-4 ${
@@ -63,7 +86,10 @@ export default async function SavedResultPage({
             >
               {isPass ? t("passed") : t("failed")}
             </span>
-            <span className="text-xs text-muted-foreground">{take.quizTitle}</span>
+            <span className="text-xs text-muted-foreground">
+              {take.quizTitle}
+              {take.licenseClassCode && ` • Hạng ${take.licenseClassCode}`}
+            </span>
           </div>
         </div>
 
@@ -72,7 +98,9 @@ export default async function SavedResultPage({
             <span className="text-2xl font-bold font-mono text-foreground tabular-nums">
               {take.score} / {take.totalQuestions}
             </span>
-            <span className="block text-[11px] text-muted-foreground">điểm số đạt được</span>
+            <span className="block text-[11px] text-muted-foreground">
+              Yêu cầu đạt: {passScore}/{take.totalQuestions} câu
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -116,9 +144,16 @@ export default async function SavedResultPage({
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold font-mono text-muted-foreground tabular-nums">
-                    CÂU {idx + 1}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold font-mono text-muted-foreground tabular-nums">
+                      CÂU {idx + 1}
+                    </span>
+                    {q.isCritical && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-destructive text-destructive-foreground">
+                        CÂU ĐIỂM LIỆT
+                      </span>
+                    )}
+                  </div>
                   <span
                     className={`text-[11px] font-semibold px-2 py-0.5 rounded ${
                       isCorrect
@@ -146,6 +181,7 @@ export default async function SavedResultPage({
                       src={q.image}
                       alt={`Minh họa câu hỏi ${q.id}`}
                       fill
+                      sizes="(max-width: 640px) 100vw, 384px"
                       className="object-contain"
                     />
                   </div>
@@ -185,6 +221,14 @@ export default async function SavedResultPage({
                     );
                   })}
                 </div>
+
+                {/* Giải thích câu hỏi */}
+                {q.explanation && (
+                  <div className="p-2.5 rounded bg-muted/60 border border-border/60 text-xs text-muted-foreground mt-1">
+                    <span className="font-semibold text-foreground">💡 Giải thích: </span>
+                    {q.explanation}
+                  </div>
+                )}
               </div>
             );
           })}

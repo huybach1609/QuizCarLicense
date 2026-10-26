@@ -50,7 +50,9 @@ public sealed class PublicQuestionsController : ControllerBase
                 q.QuestionId,
                 q.Content,
                 q.Score,
-                !string.IsNullOrEmpty(q.Image) && q.Image != "none"))
+                !string.IsNullOrEmpty(q.Image) && q.Image != "none",
+                q.IsCritical,
+                q.Category != null ? q.Category.Code : null))
             .ToListAsync(ct);
 
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -70,6 +72,7 @@ public sealed class PublicQuestionsController : ControllerBase
     {
         var question = await _context.QuizQuestions
             .AsNoTracking()
+            .Include(q => q.Category)
             .Include(q => q.QuizAnswers)
             .Include(q => q.Quizzes)
             .FirstOrDefaultAsync(q => q.QuestionId == id && q.Active, ct);
@@ -100,7 +103,10 @@ public sealed class PublicQuestionsController : ControllerBase
             question.Score,
             question.Image,
             answers,
-            inQuizzes);
+            inQuizzes,
+            question.IsCritical,
+            question.Category?.Title,
+            question.Explanation);
 
         return Ok(response);
     }

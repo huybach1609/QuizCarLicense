@@ -5,12 +5,42 @@ const BACKEND_URL =
     ? process.env.BACKEND_INTERNAL_URL || "http://localhost:5254"
     : "";
 
+export interface LicenseClass {
+  licenseClassId: number;
+  code: string;
+  name: string;
+  description: string;
+  vehicleGroup: "Motorbike" | "Car" | string;
+  totalQuestions: number;
+  durationMinutes: number;
+  passScore: number;
+  displayOrder: number;
+  examSetCount: number;
+}
+
+export interface QuestionCategory {
+  categoryId: number;
+  code: string;
+  title: string;
+  description: string | null;
+  displayOrder: number;
+  questionCount: number;
+  practiceQuizId: number | null;
+}
+
 export interface QuizSummary {
   quizId: number;
   title: string;
   detail: string;
   totalQuestions: number;
   updatedAt: string | null;
+  licenseClassCode?: string | null;
+  licenseClassName?: string | null;
+  quizType?: string;
+  examNumber?: number | null;
+  durationMinutes?: number;
+  passScore?: number;
+  isPracticeMode?: boolean;
 }
 
 export interface ExamAnswerOption {
@@ -23,6 +53,9 @@ export interface ExamQuestion {
   content: string;
   image: string | null;
   answers: ExamAnswerOption[];
+  isCritical?: boolean;
+  explanation?: string | null;
+  correctAnswerId?: number | null;
 }
 
 export interface QuizExamDetail {
@@ -31,6 +64,12 @@ export interface QuizExamDetail {
   detail: string;
   totalQuestions: number;
   questions: ExamQuestion[];
+  licenseClassCode?: string | null;
+  licenseClassName?: string | null;
+  quizType?: string;
+  durationMinutes?: number;
+  passScore?: number;
+  isPracticeMode?: boolean;
 }
 
 export interface GradedAnswerOption {
@@ -46,6 +85,8 @@ export interface GradedQuestion {
   status: string;
   selectedAnswerId: number | null;
   answers: GradedAnswerOption[];
+  isCritical?: boolean;
+  explanation?: string | null;
 }
 
 export interface TestSubmitResult {
@@ -58,6 +99,10 @@ export interface TestSubmitResult {
   startedAt: string;
   completedAt: string;
   questions: GradedQuestion[];
+  passScore?: number;
+  isPassed?: boolean;
+  hasCriticalError?: boolean;
+  licenseClassCode?: string | null;
 }
 
 export interface TakeHistoryItem {
@@ -68,6 +113,10 @@ export interface TakeHistoryItem {
   totalQuestions: number;
   startedAt: string;
   finishedAt: string | null;
+  passScore?: number;
+  isPassed?: boolean;
+  hasCriticalError?: boolean;
+  licenseClassCode?: string | null;
 }
 
 export interface PagedResponse<T> {
@@ -85,6 +134,9 @@ export interface PublicQuestionDetail {
   image: string | null;
   answers: GradedAnswerOption[];
   inQuizzes: string[];
+  isCritical?: boolean;
+  categoryTitle?: string | null;
+  explanation?: string | null;
 }
 
 export interface PublicQuestionItem {
@@ -92,6 +144,8 @@ export interface PublicQuestionItem {
   content: string;
   score: number;
   hasImage: boolean;
+  isCritical?: boolean;
+  categoryCode?: string | null;
 }
 
 export interface AuthUser {

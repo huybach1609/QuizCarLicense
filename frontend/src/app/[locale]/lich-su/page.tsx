@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { fetchApi, type PagedResponse, type TakeHistoryItem } from "@/lib/api-client";
-import { History, Eye, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
+import { History, Eye, CheckCircle2, XCircle, ArrowLeft, AlertTriangle } from "lucide-react";
 
 export default async function HistoryPage({
   params,
@@ -63,7 +63,7 @@ export default async function HistoryPage({
               <thead className="bg-muted/50 border-b border-border/60 text-muted-foreground font-semibold">
                 <tr>
                   <th className="py-2.5 px-3">Mã</th>
-                  <th className="py-2.5 px-3">Bộ đề thi</th>
+                  <th className="py-2.5 px-3">Hạng / Bộ đề thi</th>
                   <th className="py-2.5 px-3 text-center">Kết quả</th>
                   <th className="py-2.5 px-3 text-center">Điểm số</th>
                   <th className="py-2.5 px-3 hidden sm:table-cell">Thời gian thi</th>
@@ -72,7 +72,12 @@ export default async function HistoryPage({
               </thead>
               <tbody className="divide-y divide-border/40">
                 {items.map((take) => {
-                  const isPass = take.score >= Math.round(take.totalQuestions * 0.9);
+                  const passScore = take.passScore ?? Math.round(take.totalQuestions * 0.9);
+                  const isPass =
+                    take.isPassed !== undefined
+                      ? take.isPassed
+                      : take.score >= passScore && !take.hasCriticalError;
+
                   const dateFormatted = new Date(take.startedAt).toLocaleString("vi-VN", {
                     day: "2-digit",
                     month: "2-digit",
@@ -86,24 +91,39 @@ export default async function HistoryPage({
                       <td className="py-3 px-3 font-mono font-medium text-muted-foreground">
                         #{take.takeId}
                       </td>
-                      <td className="py-3 px-3 font-medium text-foreground max-w-[200px] truncate">
-                        {take.quizTitle}
+                      <td className="py-3 px-3 font-medium text-foreground max-w-[240px]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="truncate">{take.quizTitle}</span>
+                          {take.licenseClassCode && (
+                            <span className="text-[10px] text-primary font-bold">
+                              Hạng {take.licenseClassCode}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold ${
-                            isPass
-                              ? "bg-primary/10 text-primary"
-                              : "bg-destructive/10 text-destructive"
-                          }`}
-                        >
-                          {isPass ? (
-                            <CheckCircle2 className="w-3 h-3" />
-                          ) : (
-                            <XCircle className="w-3 h-3" />
+                        <div className="inline-flex flex-col items-center gap-0.5">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold ${
+                              isPass
+                                ? "bg-primary/10 text-primary"
+                                : "bg-destructive/10 text-destructive"
+                            }`}
+                          >
+                            {isPass ? (
+                              <CheckCircle2 className="w-3 h-3" />
+                            ) : (
+                              <XCircle className="w-3 h-3" />
+                            )}
+                            <span>{isPass ? "Đạt" : "Không đạt"}</span>
+                          </span>
+                          {take.hasCriticalError && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-destructive">
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              <span>Sai câu điểm liệt</span>
+                            </span>
                           )}
-                          <span>{isPass ? "Đạt" : "Không đạt"}</span>
-                        </span>
+                        </div>
                       </td>
                       <td className="py-3 px-3 text-center font-mono font-bold tabular-nums">
                         {take.score} / {take.totalQuestions}

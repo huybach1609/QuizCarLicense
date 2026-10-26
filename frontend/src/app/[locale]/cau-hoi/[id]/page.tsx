@@ -81,6 +81,7 @@ export default async function QuestionDetailPage({
               src={question.image}
               alt={`Hình minh họa câu hỏi ${question.questionId}`}
               fill
+              sizes="(max-width: 640px) 100vw, 448px"
               className="object-contain"
               priority
             />

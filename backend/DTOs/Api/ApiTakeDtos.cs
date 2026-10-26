@@ -10,7 +10,11 @@ public sealed record TakeHistoryItemResponse(
     int Score,
     int TotalQuestions,
     DateTimeOffset StartedAt,
-    DateTimeOffset? FinishedAt);
+    DateTimeOffset? FinishedAt,
+    int PassScore = 27,
+    bool IsPassed = false,
+    bool HasCriticalError = false,
+    string? LicenseClassCode = null);
 
 /// <summary>
 /// Danh sách dữ liệu có phân trang.
@@ -33,4 +37,8 @@ public sealed record TakeDetailResponse(
     int TotalQuestions,
     DateTimeOffset StartedAt,
     DateTimeOffset? FinishedAt,
-    IReadOnlyList<GradedQuestionResponse> Questions);
+    IReadOnlyList<GradedQuestionResponse> Questions,
+    int PassScore = 27,
+    bool IsPassed = false,
+    bool HasCriticalError = false,
+    string? LicenseClassCode = null);

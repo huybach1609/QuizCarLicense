@@ -417,6 +417,7 @@ openspec
 .cursor
 .agents
 .vscode
+.codex/
 # Frontend Next.js build & deps
 frontend/node_modules/
 frontend/.next/
