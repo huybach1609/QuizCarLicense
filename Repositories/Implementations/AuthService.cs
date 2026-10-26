@@ -10,18 +10,18 @@ using System.Security.Claims;
 
 namespace QuizCarLicense.Repositories.Implementations
 {
-    public class AuthService : IAuthService
+    public sealed class AuthService : IAuthService
     {
         private readonly QuizCarLicenseContext _context;
 
-        public AuthService(QuizCarLicenseContext context )
+        public AuthService(QuizCarLicenseContext context)
         {
             _context = context;
         }
 
-        public async Task<MessageReturn> Login(string username, string password)
+        public async Task<MessageReturn> Login(string username, string password, CancellationToken ct = default)
         {
-            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(username));
+            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(username), ct);
             if (userDb == null)
                 return new MessageReturn { Message = "Account not exist", Result = false };
 
@@ -32,11 +32,10 @@ namespace QuizCarLicense.Repositories.Implementations
             if (needsRehash)
             {
                 userDb.Password = PasswordHelper.HashPassword(userDb, password);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(ct);
             }
 
             // create claimsprincipal
-            // id, name, email, role
             var claims = new List<Claim>
             {
                 new (ClaimTypes.NameIdentifier, userDb.UserId.ToString()),
@@ -54,12 +53,12 @@ namespace QuizCarLicense.Repositories.Implementations
 
         public MessageReturn Logout()
         {
-            throw new NotImplementedException();
+            return new MessageReturn { Result = true, Message = "Logout successful" };
         }
 
-        public async Task<MessageReturn> Signup(CreateUserRequest request)
+        public async Task<MessageReturn> Signup(CreateUserRequest request, CancellationToken ct = default)
         {
-            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(request.UserName));
+            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(request.UserName), ct);
             if (userDb != null)
             {
                 return new MessageReturn
@@ -77,7 +76,7 @@ namespace QuizCarLicense.Repositories.Implementations
             user.Password = PasswordHelper.HashPassword(user, request.Password ?? "123");
 
             _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
             return new MessageReturn
             {
                 Message = "Signup successful",
@@ -85,14 +84,14 @@ namespace QuizCarLicense.Repositories.Implementations
             };
         }
 
-        public async Task<bool> HasAdminAsync()
+        public async Task<bool> HasAdminAsync(CancellationToken ct = default)
         {
-            return await _context.Users.AnyAsync(u => u.Role == UserRole.Admin.ToString());
+            return await _context.Users.AnyAsync(u => u.Role == UserRole.Admin.ToString(), ct);
         }
 
-        public async Task<MessageReturn> CreateAdminAsync(CreateUserRequest request)
+        public async Task<MessageReturn> CreateAdminAsync(CreateUserRequest request, CancellationToken ct = default)
         {
-            if (await HasAdminAsync())
+            if (await HasAdminAsync(ct))
             {
                 return new MessageReturn
                 {
@@ -101,7 +100,7 @@ namespace QuizCarLicense.Repositories.Implementations
                 };
             }
 
-            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(request.UserName));
+            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(request.UserName), ct);
             if (userDb != null)
             {
                 return new MessageReturn
@@ -120,17 +119,17 @@ namespace QuizCarLicense.Repositories.Implementations
             user.Password = PasswordHelper.HashPassword(user, request.Password);
 
             _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
 
             // Link any pre-seeded quizzes that have no owner to this admin
-            var unassignedQuizzes = await _context.Quizzes.Where(q => q.UserId == null).ToListAsync();
+            var unassignedQuizzes = await _context.Quizzes.Where(q => q.UserId == null).ToListAsync(ct);
             if (unassignedQuizzes.Count != 0)
             {
                 foreach (var quiz in unassignedQuizzes)
                 {
                     quiz.UserId = user.UserId;
                 }
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(ct);
             }
 
             return new MessageReturn

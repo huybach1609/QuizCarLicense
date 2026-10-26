@@ -93,10 +93,10 @@ public class Index : PageModel
     }
 
     /// <summary>
-    // GET: /Quiz/Index?handler=Delete&id=123
+    /// GET: /Quiz/Index?handler=Delete&amp;id=123
     /// </summary>
     /// <param name="id">id of quiz</param>
-    /// <param name="ct">canclelationToken</param>
+    /// <param name="ct">cancellation token</param>
     /// <returns></returns>
     public async Task<IActionResult> OnGetDeleteAsync(int id, CancellationToken ct)
     {
@@ -106,7 +106,7 @@ public class Index : PageModel
     }
 
     /// <summary>
-    /// GET: /Quiz/Index?handler=ShowDetails&id=123
+    /// GET: /Quiz/Index?handler=ShowDetails&amp;id=123
     /// </summary>
     /// <param name="id"></param>
     /// <param name="ct"></param>

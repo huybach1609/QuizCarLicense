@@ -1,4 +1,5 @@
-﻿using QuizCarLicense.Models;
+using QuizCarLicense.DTOs.Api;
+using QuizCarLicense.Models;
 
 namespace QuizCarLicense.Repositories.Interfaces
 {
@@ -10,6 +11,11 @@ namespace QuizCarLicense.Repositories.Interfaces
         /// <param name="ct">Cancellation token.</param>
         /// <returns>List of quizzes.</returns>
         Task<List<Quiz>> GetAllAsync(CancellationToken ct = default);
+
+        /// <summary>
+        /// Retrieves public quiz summaries with question count via projection for API.
+        /// </summary>
+        Task<IReadOnlyList<QuizSummaryResponse>> GetPublicQuizSummariesAsync(CancellationToken ct = default);
 
         /// <summary>
         /// Retrieves quizzes by user ID.

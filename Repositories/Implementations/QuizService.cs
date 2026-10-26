@@ -1,17 +1,18 @@
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using QuizCarLicense.Constrains;
+using QuizCarLicense.DTOs.Api;
 using QuizCarLicense.Models;
 using QuizCarLicense.Repositories.Interfaces;
 
 namespace QuizCarLicense.Repositories.Implementations
 {
-    public class QuizService : IQuizService
+    public sealed class QuizService : IQuizService
     {
         private readonly QuizCarLicenseContext _context;
         private readonly IMemoryCache _cache;
         private const string CacheKeyAllQuizzes = "quizzes:all";
+        private const string CacheKeyPublicSummaries = "quizzes:public_summaries";
 
         public QuizService(QuizCarLicenseContext context, IMemoryCache cache)
         {
@@ -36,6 +37,30 @@ namespace QuizCarLicense.Repositories.Implementations
             _cache.Set(CacheKeyAllQuizzes, list, TimeSpan.FromMinutes(15));
             return list;
         }
+
+        public async Task<IReadOnlyList<QuizSummaryResponse>> GetPublicQuizSummariesAsync(CancellationToken ct = default)
+        {
+            if (_cache.TryGetValue(CacheKeyPublicSummaries, out IReadOnlyList<QuizSummaryResponse>? cached) && cached != null)
+            {
+                return cached;
+            }
+
+            var list = await _context.Quizzes
+                .AsNoTracking()
+                .Where(q => q.UserId == null || (q.User != null && q.User.Role == UserRole.Admin.ToString()))
+                .OrderByDescending(q => q.UpdatedAt)
+                .Select(q => new QuizSummaryResponse(
+                    q.QuizId,
+                    q.Title,
+                    q.Detail ?? string.Empty,
+                    q.Questions.Count,
+                    q.UpdatedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(q.UpdatedAt.Value, DateTimeKind.Utc)) : null))
+                .ToListAsync(ct);
+
+            _cache.Set(CacheKeyPublicSummaries, list, TimeSpan.FromMinutes(15));
+            return list;
+        }
+
         public async Task<List<Quiz>> GetByUserAsync(int userId, CancellationToken ct = default)
         {
             return await _context.Quizzes
@@ -52,9 +77,10 @@ namespace QuizCarLicense.Repositories.Implementations
                 .AsNoTracking()
                 .FirstOrDefaultAsync(q => q.QuizId == quizId, ct);
         }
+
         public async Task<bool> InsertAsync(Quiz quiz, int userId, CancellationToken ct = default)
         {
-            quiz.QuizId = new();                       // ensure new
+            quiz.QuizId = new();
             quiz.UserId = userId;
             quiz.CreatedAt = DateTime.UtcNow;
             quiz.UpdatedAt = DateTime.UtcNow;
@@ -72,8 +98,8 @@ namespace QuizCarLicense.Repositories.Implementations
 
             quizDb.Title = input.Title;
             quizDb.Detail = input.Detail;
-            quizDb.UserId = userId;               // keep owner updated if that’s intended
-            quizDb.UpdatedAt = DateTime.UtcNow;   // do NOT touch CreatedAt
+            quizDb.UserId = userId;
+            quizDb.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(ct);
             InvalidateCache(input.QuizId);
@@ -91,21 +117,17 @@ namespace QuizCarLicense.Repositories.Implementations
             return true;
         }
 
-
-        // NEW: query all selectable questions (for the Add page)
         public async Task<List<QuizQuestion>> GetAllQuestionsAsync(CancellationToken ct = default) =>
             await _context.QuizQuestions
                 .AsNoTracking()
                 .OrderBy(q => q.QuestionId)
                 .ToListAsync(ct);
 
-        // NEW: load a quiz with its current questions (tracked for update)
         public async Task<Quiz?> GetWithQuestionsAsync(int quizId, CancellationToken ct = default) =>
             await _context.Quizzes
                 .Include(q => q.Questions)
                 .FirstOrDefaultAsync(q => q.QuizId == quizId, ct);
 
-        // NEW: replace question set atomically
         public async Task<bool> ReplaceQuestionsAsync(int quizId, IEnumerable<int> questionIds, CancellationToken ct = default)
         {
             var quiz = await _context.Quizzes
@@ -113,7 +135,6 @@ namespace QuizCarLicense.Repositories.Implementations
                 .FirstOrDefaultAsync(q => q.QuizId == quizId, ct);
             if (quiz is null) return false;
 
-            // Load selected questions in one query
             var selected = await _context.QuizQuestions
                 .Where(q => questionIds.Contains(q.QuestionId))
                 .ToListAsync(ct);
@@ -131,6 +152,7 @@ namespace QuizCarLicense.Repositories.Implementations
         private void InvalidateCache(int quizId)
         {
             _cache.Remove(CacheKeyAllQuizzes);
+            _cache.Remove(CacheKeyPublicSummaries);
             _cache.Remove($"quiz:full:{quizId}");
             _cache.Remove($"quiz:answer_key:{quizId}");
         }

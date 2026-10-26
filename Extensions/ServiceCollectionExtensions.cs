@@ -1,8 +1,18 @@
+using System.Reflection;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using QuizCarLicense.Constrains;
+using QuizCarLicense.DTOs.Auth;
 using QuizCarLicense.Filters;
+using QuizCarLicense.Middleware;
 using QuizCarLicense.Models;
 using QuizCarLicense.Repositories.Implementations;
 using QuizCarLicense.Repositories.Interfaces;
@@ -13,11 +23,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAppOptions(this IServiceCollection services, IConfiguration cfg)
     {
-        // Example strongly-typed options
-        //services.Configure<AppUrls>(cfg.GetSection("AppUrls"));
-        //services.AddSingleton(sp => sp.GetRequiredService<IOptions<AppUrls>>().Value);
-   
-
+        services.Configure<JwtOptions>(cfg.GetSection(JwtOptions.SectionName));
         return services;
     }
 
@@ -36,17 +42,14 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Register app services 
     /// </summary>
-    /// <param name="services"></param>
-    /// <returns></returns>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-
         services.AddScoped<IQuestionService, QuestionService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuizService, QuizService>();
         services.AddScoped<ITestService, TestService>();
         services.AddScoped<ITakeService, TakeService>();
-
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         return services;
     }
@@ -64,22 +67,67 @@ public static class ServiceCollectionExtensions
             options.Cookie.IsEssential = true;
         });
         services.AddScoped<RedirectIfAuthenticatedFilter>();
-        // HttpClients, message bus, cache, etc.
-        // services.AddHttpClient("github", c => c.BaseAddress = new Uri("https://api.github.com"));
         return services;
     }
 
-    public static IServiceCollection AddPolicies(this IServiceCollection services)
+    public static IServiceCollection AddPolicies(this IServiceCollection services, IConfiguration cfg)
     {
-        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
+        var jwtOptions = cfg.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+        var key = Encoding.UTF8.GetBytes(string.IsNullOrEmpty(jwtOptions.SecretKey)
+            ? "QuizCarLicense_FallbackSecretSigningKey_AtLeast32Chars!"
+            : jwtOptions.SecretKey);
+
+        services.AddAuthentication(options =>
+        {
+            // Mặc định cho Razor Pages
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        })
+        .AddCookie(options =>
+        {
+            options.LoginPath = "/Auth/Login";
+            options.AccessDeniedPath = "/Auth/Denied";
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.SlidingExpiration = true;
+
+            // Đối với API request, không redirect 302 mà trả thẳng mã 401/403
+            options.Events.OnRedirectToLogin = context =>
             {
-                options.LoginPath = "/Auth/Login";
-                options.AccessDeniedPath = "/Auth/Denied";
-                options.ExpireTimeSpan = TimeSpan.FromHours(8);
-                options.SlidingExpiration = true;
-                // options.Cookie.Name = ".QuizCarLicense.Auth";
-            });
+                if (context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    return Task.CompletedTask;
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
+        })
+        .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+        {
+            options.RequireHttpsMetadata = false;
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtOptions.Issuer,
+                ValidAudience = jwtOptions.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ClockSkew = TimeSpan.FromMinutes(1)
+            };
+        });
 
         services.AddAuthorizationBuilder()
             .AddPolicy("AdminOnly", policy =>
@@ -89,17 +137,139 @@ public static class ServiceCollectionExtensions
             .AddPolicy("UserOrAdmin", policy =>
                 policy.RequireRole(UserRole.User.ToString(), UserRole.Admin.ToString()));
 
+        return services;
+    }
 
+    /// <summary>
+    /// Thêm toàn bộ hạ tầng cho RESTful Web API (.NET 8):
+    /// - Controllers + JsonStringEnumConverter
+    /// - ProblemDetails + IExceptionHandler
+    /// - CORS
+    /// - Rate Limiting
+    /// - Response Compression
+    /// - Output Caching
+    /// - Swagger / OpenAPI với JWT Bearer
+    /// </summary>
+    public static IServiceCollection AddApiInfrastructure(this IServiceCollection services, IConfiguration cfg)
+    {
+        // 1. Controllers & JSON Options
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            });
 
-        //authentication policies
-        //or CORS
+        // 2. Exception Handling & RFC 7807 ProblemDetails
+        services.AddExceptionHandler<ApiExceptionHandler>();
+        services.AddProblemDetails();
+
+        // 3. CORS Policy
+        var allowedOrigins = cfg.GetSection("Cors:AllowedOrigins").Get<string[]>() ??
+            new[] { "http://localhost:5173", "http://localhost:3000" };
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowReactClient", policy =>
+            {
+                policy.WithOrigins(allowedOrigins)
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
+        });
+
+        // 4. Rate Limiting
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            // Giới hạn xác thực: 5 requests / phút / IP
+            options.AddPolicy("AuthLimit", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
+
+            // Giới hạn nộp bài: 15 requests / phút / IP
+            options.AddPolicy("SubmitLimit", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 15,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
+        });
+
+        // 5. Response Compression
+        services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+        });
+
+        // 6. Output Caching
+        services.AddOutputCache(options =>
+        {
+            options.AddPolicy("QuizzesCache", builder =>
+                builder.Expire(TimeSpan.FromMinutes(5)).Tag("quizzes"));
+        });
+
+        // 7. Swagger / OpenAPI
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "QuizCarLicense RESTful API",
+                Version = "v1",
+                Description = "Tầng API cho ứng dụng ôn thi lý thuyết sát hạch lái xe, hỗ trợ xác thực JWT Bearer và cơ chế thi Stateless."
+            });
+
+            // Nạp file XML comments nếu có
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            if (File.Exists(xmlPath))
+            {
+                c.IncludeXmlComments(xmlPath);
+            }
+
+            // Cấu hình JWT Bearer trong Swagger UI
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Nhập token JWT theo định dạng: Bearer {token}"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+        });
 
         return services;
     }
 }
-
-// Example options class
-//public record AppUrls
-//{
-//    public string PublicBaseUrl { get; init; } = "";
-//}

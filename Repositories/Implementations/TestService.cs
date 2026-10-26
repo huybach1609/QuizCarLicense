@@ -151,14 +151,13 @@ namespace QuizCarLicense.Repositories.Implementations
             return take;
         }
 
-        public async Task<List<QuestionDTO>> BuildGuestTestResultAsync(Quiz quiz, List<TestAnswerRequest> userAnswers, CancellationToken ct)
+        public Task<List<QuestionDTO>> BuildGuestTestResultAsync(Quiz quiz, List<TestAnswerRequest> userAnswers, CancellationToken ct)
         {
-            var questions = await _context.QuizQuestions
-                .AsNoTracking()
-                .Where(q => q.Quizzes.Any(qz => qz.QuizId == quiz.QuizId))
-                .Include(q => q.QuizAnswers)
-                .ToListAsync(ct);
-            var result = new List<QuestionDTO>();
+            ct.ThrowIfCancellationRequested();
+
+            // Zero DB read: Reuse cached quiz questions & answers
+            var questions = quiz.Questions.OrderBy(q => q.QuestionId).ToList();
+            var result = new List<QuestionDTO>(questions.Count);
 
             foreach (var question in questions)
             {
@@ -197,7 +196,7 @@ namespace QuizCarLicense.Repositories.Implementations
                 result.Add(questionDTO);
             }
 
-            return result;
+            return Task.FromResult(result);
         }
     }
 }

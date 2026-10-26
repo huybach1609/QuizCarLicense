@@ -169,9 +169,9 @@ Khi toàn bộ API ở Giai đoạn 2 đã sẵn sàng và được kiểm thử
 - [x] **Task 1.6:** Cập nhật lại `README.md` cho khớp với PostgreSQL 16 thực tế đang dùng.
 
 ### Bước 2: Mở rộng Web API cho React
-- [ ] **Task 2.1:** Cấu hình `AddControllers()` (hoặc Minimal APIs), Swagger, CORS và Rate Limiting trong `Program.cs` / `ServiceCollectionExtensions.cs`.
-- [ ] **Task 2.2:** Xây dựng các API `/api/v1/auth`, `/api/v1/quizzes`, `/api/v1/tests`, `/api/v1/takes`.
-- [ ] **Task 2.3:** Chuyển luồng Guest Submit sang Stateless (trả kết quả trực tiếp qua JSON thay vì lưu `HttpContext.Session`).
+- [x] **Task 2.1:** Cấu hình `AddControllers()`, JWT Bearer Authentication, Swagger với Bearer UI, CORS, Response Compression, Output Caching và Rate Limiting trong `Program.cs` / `ServiceCollectionExtensions.cs`.
+- [x] **Task 2.2:** Xây dựng các API Controller (`/api/v1/auth`, `/api/v1/quizzes`, `/api/v1/takes`, `/api/v1/admin/quizzes`, `/api/v1/admin/questions`).
+- [x] **Task 2.3:** Chuyển luồng Guest Submit sang Stateless (trả kết quả trực tiếp qua JSON kèm chi tiết câu đúng/sai hoàn toàn trên RAM - Zero DB Read - thay vì lưu `HttpContext.Session`).
 
 ### Bước 3: Xây dựng React App & Chuyển giao
 - [ ] **Task 3.1:** Khởi tạo project React + Vite + TypeScript + TailwindCSS (trong thư mục `ClientApp/` hoặc repo riêng).

@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using QuizCarLicense.Constrains;
 using QuizCarLicense.DTOs;
+using QuizCarLicense.DTOs.Api;
 using QuizCarLicense.Models;
 using QuizCarLicense.Repositories.Interfaces;
 
 namespace QuizCarLicense.Repositories.Implementations
 {
-    public class TakeService : ITakeService
+    public sealed class TakeService : ITakeService
     {
         private readonly QuizCarLicenseContext _context;
 
@@ -15,20 +16,13 @@ namespace QuizCarLicense.Repositories.Implementations
             _context = context;
         }
 
-        /// <summary>
-        /// Retrieves the most recent takes for a given user.
-        /// </summary>
-        /// <param name="userId">The ID of the user.</param>
-        /// <param name="count">The number of takes to retrieve.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>A list of recent takes.</returns>
         public async Task<List<Take>> GetRecentTakesAsync(int userId, int count = 5, CancellationToken ct = default)
         {
             return await _context.Takes.AsNoTracking()
                  .Where(t => t.UserId == userId)
                  .OrderByDescending(t => t.StartedAt)
                  .Include(t => t.Quiz)
-                 .ThenInclude(q => q.Questions)
+                 .ThenInclude(q => q!.Questions)
                  .Take(count)
                  .ToListAsync(ct);
         }
@@ -58,80 +52,108 @@ namespace QuizCarLicense.Repositories.Implementations
                 .ToListAsync(ct);
         }
 
+        public async Task<PagedResponse<TakeHistoryItemResponse>> GetUserTakesPagedAsync(int userId, int pageNumber, int pageSize, CancellationToken ct = default)
+        {
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
+
+            var baseQuery = _context.Takes.AsNoTracking()
+                .Where(t => t.UserId == userId);
+
+            var totalCount = await baseQuery.CountAsync(ct);
+
+            var items = await baseQuery
+                .OrderByDescending(t => t.StartedAt)
+                .ThenByDescending(t => t.TakeId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new TakeHistoryItemResponse(
+                    t.TakeId,
+                    t.QuizId ?? 0,
+                    t.Quiz != null ? t.Quiz.Title : "No Title",
+                    t.Score,
+                    t.Quiz != null ? t.Quiz.Questions.Count : 0,
+                    new DateTimeOffset(DateTime.SpecifyKind(t.StartedAt, DateTimeKind.Utc)),
+                    t.FinishedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(t.FinishedAt.Value, DateTimeKind.Utc)) : null))
+                .ToListAsync(ct);
+
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            return new PagedResponse<TakeHistoryItemResponse>(items, totalCount, pageNumber, pageSize, totalPages);
+        }
+
         public async Task<bool> CheckTakeAsync(int takeId, CancellationToken ct)
             => await _context.Takes.AsNoTracking()
                 .AnyAsync(t => t.TakeId == takeId, ct);
 
         public async Task<Take?> GetTakeWithAnswersAsync(int takeId, CancellationToken ct)
-            => await _context.Takes
+        {
+            return await _context.Takes
                 .AsNoTracking()
-                .AsSplitQuery()
                 .Include(t => t.Quiz)
-                    .ThenInclude(q => q.User)
+                    .ThenInclude(q => q!.User)
                 .Include(t => t.TakeAnswers)
                     .ThenInclude(ta => ta.Answer)
-                        .ThenInclude(a => a.Question)
-                .Include(t => t.TakeAnswers)
-                    .ThenInclude(ta => ta.Answer!.Question!.QuizAnswers)
                 .FirstOrDefaultAsync(t => t.TakeId == takeId, ct);
+        }
 
         public async Task<List<QuestionDTO>> BuildTestQuestionsAsync(Take take, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
-            var questionDict = new Dictionary<int, QuestionDTO>();
-
-            // answered questions -> QuestionDTO
-            foreach (var ta in take.TakeAnswers)
+            if (!take.QuizId.HasValue)
             {
-                var q = ta.Answer?.Question;
-                if (q == null) continue;
-
-                var qid = q.QuestionId;
-                if (!questionDict.ContainsKey(qid))
-                {
-                    questionDict[qid] = new QuestionDTO
-                    {
-                        Id = qid,
-                        Content = q.Content,
-                        Status = (ta.Answer?.IsCorrect ?? false) ? QuestionStatus.TRUE : QuestionStatus.FALSE,
-                        AnswerId = ta.AnswerId ?? -1,
-                        Answers = q.QuizAnswers
-                            .Select(qa => new AnswerDTO
-                            {
-                                Id = qa.AnswerId,
-                                Content = qa.Content,
-                                IsCorrect = qa.IsCorrect
-                            })
-                            .ToList()
-                    };
-                }
+                return new List<QuestionDTO>();
             }
 
-            // unfinished questions (in the quiz but not answered in this take)
-            var unfinished = await LoadUnTakenQuestionsAsync(take, ct);
-            foreach (var q in unfinished)
+            // Tải danh sách tất cả câu hỏi của đề thi kèm đáp án (Tránh cycle Include)
+            var quizQuestions = await _context.QuizQuestions
+                .AsNoTracking()
+                .Where(q => q.Quizzes.Any(qz => qz.QuizId == take.QuizId.Value))
+                .Include(q => q.QuizAnswers)
+                .OrderBy(q => q.QuestionId)
+                .ToListAsync(ct);
+
+            // Tập hợp ID các đáp án đã chọn trong lượt thi này
+            var selectedAnswerIds = take.TakeAnswers
+                .Where(ta => ta.AnswerId.HasValue)
+                .Select(ta => ta.AnswerId!.Value)
+                .ToHashSet();
+
+            var result = new List<QuestionDTO>(quizQuestions.Count);
+
+            foreach (var question in quizQuestions)
             {
-                if (!questionDict.ContainsKey(q.QuestionId))
+                // Tìm xem trong câu này, đáp án nào được chọn
+                var selectedAnswer = question.QuizAnswers.FirstOrDefault(qa => selectedAnswerIds.Contains(qa.AnswerId));
+                var correctAnswer = question.QuizAnswers.FirstOrDefault(qa => qa.IsCorrect);
+
+                QuestionStatus status = QuestionStatus.NOTFINISH;
+                int? answerId = null;
+
+                if (selectedAnswer != null)
                 {
-                    questionDict[q.QuestionId] = new QuestionDTO
-                    {
-                        Id = q.QuestionId,
-                        Content = q.Content,
-                        Status = QuestionStatus.NOTFINISH,
-                        Answers = q.QuizAnswers
-                            .Select(qa => new AnswerDTO
-                            {
-                                Id = qa.AnswerId,
-                                Content = qa.Content,
-                                IsCorrect = qa.IsCorrect
-                            })
-                            .ToList()
-                    };
+                    answerId = selectedAnswer.AnswerId;
+                    status = selectedAnswer.IsCorrect ? QuestionStatus.TRUE : QuestionStatus.FALSE;
                 }
+
+                result.Add(new QuestionDTO
+                {
+                    Id = question.QuestionId,
+                    Content = question.Content,
+                    Image = question.Image,
+                    Status = status,
+                    AnswerId = answerId,
+                    Answers = question.QuizAnswers.Select(qa => new AnswerDTO
+                    {
+                        Id = qa.AnswerId,
+                        Content = qa.Content,
+                        IsCorrect = qa.IsCorrect
+                    }).ToList()
+                });
             }
 
-            return questionDict.Values.OrderBy(x => x.Id).ToList();
+            return result;
         }
 
         public async Task<bool> DeleteTakeAsync(int takeId, CancellationToken ct)
@@ -142,28 +164,5 @@ namespace QuizCarLicense.Repositories.Implementations
             _context.Takes.Remove(take);
             return await _context.SaveChangesAsync(ct) > 0;
         }
-
-        private async Task<List<QuizQuestion>> LoadUnTakenQuestionsAsync(Take take, CancellationToken ct)
-        {
-            // all questions of the quiz
-            var quizQuestions = await _context.Quizzes
-                .Where(q => q.QuizId == take.QuizId)
-                .SelectMany(q => q.Questions)
-                .Include(q => q.QuizAnswers)
-                .ToListAsync(ct);
-
-            // question ids answered in this take
-            var completedQuestionIds = take.TakeAnswers
-                .Select(ta => ta.Answer?.QuestionId)
-                .Where(id => id.HasValue)
-                .Select(id => id!.Value)
-                .Distinct()
-                .ToHashSet();
-
-            return quizQuestions
-                .Where(q => !completedQuestionIds.Contains(q.QuestionId))
-                .ToList();
-        }
-
     }
 }

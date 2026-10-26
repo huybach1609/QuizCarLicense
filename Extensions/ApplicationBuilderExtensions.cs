@@ -1,23 +1,49 @@
-﻿
 namespace QuizCarLicense.Extensions;
 
 public static class ApplicationBuilderExtensions
 {
     public static IApplicationBuilder ConfigurePipeline(this IApplicationBuilder app, IWebHostEnvironment env)
     {
+        // 1. Nén phản hồi
+        app.UseResponseCompression();
 
-        app.UseHttpsRedirection();
+        // 2. Xử lý lỗi (ApiExceptionHandler sẽ tự bắt các lỗi /api, Razor Pages dùng UseGlobalExceptionHandling)
+        app.UseExceptionHandler();
         app.UseGlobalExceptionHandling(env);
 
+        app.UseHttpsRedirection();
         app.UseStaticFiles();
+
         app.UseRouting();
+
+        // 3. CORS
+        app.UseCors("AllowReactClient");
+
+        // 4. Rate Limiting
+        app.UseRateLimiter();
+
+        // 5. Output Cache
+        app.UseOutputCache();
+
+        // 6. Session & Auth
         app.UseSession();
         app.UseAuthentication();
         app.UseAuthorization();
 
+        // 7. Swagger UI trong Development
+        if (env.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "QuizCarLicense API v1");
+                c.RoutePrefix = "swagger";
+            });
+        }
 
         return app;
     }
+
     public static IApplicationBuilder UseGlobalExceptionHandling(this IApplicationBuilder app, IWebHostEnvironment env)
     {
         if (env.IsDevelopment())
@@ -26,26 +52,9 @@ public static class ApplicationBuilderExtensions
         }
         else
         {
-            //app.UseExceptionHandler(errorApp =>
-            //{
-            //    errorApp.Run(async context =>
-            //    {
-            //        var feature = context.Features.Get<IExceptionHandlerFeature>();
-            //        var problem = new ProblemDetails
-            //        {
-            //            Status = StatusCodes.Status500InternalServerError,
-            //            Title = "An unexpected error occurred.",
-            //            Detail = env.IsDevelopment() ? feature?.Error.ToString() : null
-            //        };
-            //        context.Response.StatusCode = problem.Status ?? 500;
-            //        context.Response.ContentType = "application/problem+json";
-            //        await context.Response.WriteAsJsonAsync(problem);
-            //    });
-            //});
             app.UseExceptionHandler("/Error");
             app.UseHsts();
         }
         return app;
     }
-
 }

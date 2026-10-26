@@ -1,0 +1,134 @@
+### QuizCarLicense API v1 (.NET 8 + JWT Bearer)
+@baseUrl = http://localhost:5254
+@contentType = application/json
+
+###############################################################################
+# 1. AUTHENTICATION & PROFILE
+###############################################################################
+
+### 1.1 Đăng ký tài khoản học viên mới
+# @name register
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "student_test_1",
+  "fullName": "Nguyen Van A",
+  "password": "Password123@"
+}
+
+### 1.2 Đăng nhập nhận JWT Access Token (User)
+# @name loginUser
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "student_test_1",
+  "password": "Password123@"
+}
+
+### 1.3 Đăng nhập nhận JWT Access Token (Admin mặc định - admin / 123456)
+# @name loginAdmin
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "admin",
+  "password": "Password123@"
+}
+
+### Lưu biến token từ kết quả đăng nhập (hoặc dán thủ công vào đây)
+@userToken = {{loginUser.response.body.accessToken}}
+@adminToken = {{loginAdmin.response.body.accessToken}}
+
+### 1.4 Lấy thông tin tài khoản hiện tại (Me)
+GET {{baseUrl}}/api/v1/auth/me
+Authorization: Bearer {{userToken}}
+
+### 1.5 Đăng xuất
+POST {{baseUrl}}/api/v1/auth/logout
+Authorization: Bearer {{userToken}}
+
+###############################################################################
+# 2. QUIZZES & EXAM ENGINE
+###############################################################################
+
+### 2.1 Lấy danh sách đề thi công khai (Có OutputCache 5 phút)
+GET {{baseUrl}}/api/v1/quizzes
+
+### 2.2 Lấy chi tiết đề thi và danh sách câu hỏi để làm bài (Không lộ đáp án đúng)
+GET {{baseUrl}}/api/v1/quizzes/1
+
+### 2.3 Nộp bài thi ở chế độ KHÁCH (Stateless Guest - không cần token, không lưu Session)
+POST {{baseUrl}}/api/v1/quizzes/1/submit
+Content-Type: {{contentType}}
+
+{
+  "startTime": "2026-10-26T10:00:00Z",
+  "selectedAnswerIds": [1, 5, 9]
+}
+
+### 2.4 Nộp bài thi có ĐĂNG NHẬP (Lưu vào bảng Take và TakeAnswer)
+POST {{baseUrl}}/api/v1/quizzes/1/submit
+Content-Type: {{contentType}}
+Authorization: Bearer {{userToken}}
+
+{
+  "startTime": "2026-10-26T10:00:00Z",
+  "selectedAnswerIds": [1, 5, 9]
+}
+
+###############################################################################
+# 3. LỊCH SỬ THI (TAKES)
+###############################################################################
+
+### 3.1 Xem danh sách lịch sử thi của tài khoản (có phân trang)
+GET {{baseUrl}}/api/v1/takes?page=1&pageSize=10
+Authorization: Bearer {{userToken}}
+
+### 3.2 Xem chi tiết một lần thi kèm đáp án đúng/sai
+GET {{baseUrl}}/api/v1/takes/1
+Authorization: Bearer {{userToken}}
+
+### 3.3 Xóa một lượt thi trong lịch sử
+DELETE {{baseUrl}}/api/v1/takes/1
+Authorization: Bearer {{userToken}}
+
+###############################################################################
+# 4. QUẢN TRỊ (ADMIN ONLY)
+###############################################################################
+
+### 4.1 Lấy danh sách câu hỏi sát hạch có phân trang
+GET {{baseUrl}}/api/v1/admin/questions?page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 4.2 Lấy chi tiết 1 câu hỏi
+GET {{baseUrl}}/api/v1/admin/questions/1
+Authorization: Bearer {{adminToken}}
+
+### 4.3 Tạo câu hỏi mới
+POST {{baseUrl}}/api/v1/admin/questions
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "content": "Người điều khiển phương tiện tham gia giao thông trong hầm đường bộ phải tuân thủ quy tắc nào?",
+  "score": 1,
+  "answers": [
+    { "content": "Bật đèn chiếu xa trong mọi trường hợp", "isCorrect": false },
+    { "content": "Bật đèn chiếu sáng gần; xe máy chuyên dùng phải bật đèn chiếu sáng", "isCorrect": true },
+    { "content": "Được phép quay đầu xe khi cần thiết", "isCorrect": false },
+    { "content": "Được phép lùi xe khi phát hiện tắc đường", "isCorrect": false }
+  ]
+}
+
+### 4.4 Tạo đề thi mới
+POST {{baseUrl}}/api/v1/admin/quizzes
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "title": "Bộ đề thi thử sát hạch B2 - Đề số 10",
+  "detail": "Bộ đề ôn luyện nâng cao gồm 35 câu hỏi",
+  "questionIds": [1, 2, 3, 4, 5]
+}

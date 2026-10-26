@@ -1,4 +1,5 @@
 using QuizCarLicense.DTOs;
+using QuizCarLicense.DTOs.Api;
 using QuizCarLicense.Models;
 
 namespace QuizCarLicense.Repositories.Interfaces
@@ -8,6 +9,8 @@ namespace QuizCarLicense.Repositories.Interfaces
         Task<List<Take>> GetRecentTakesAsync(int userId, int count = 5, CancellationToken ct = default);
 
         Task<List<TakeHistoryDto>> GetUserTakesAsync(int userId, int? limit = null, CancellationToken ct = default);
+
+        Task<PagedResponse<TakeHistoryItemResponse>> GetUserTakesPagedAsync(int userId, int pageNumber, int pageSize, CancellationToken ct = default);
 
         Task<bool> CheckTakeAsync(int takeId, CancellationToken ct);
 
