@@ -31,6 +31,31 @@ public sealed record QuestionCategoryResponse(
     int? PracticeQuizId);
 
 /// <summary>
+/// Chi tiết ôn tập một chương kiến thức theo từng hạng GPLX.
+/// </summary>
+public sealed record PracticeChapterSummaryResponse(
+    int QuizId,
+    int ExamNumber,
+    string CategoryCode,
+    string Title,
+    string Detail,
+    int TotalQuestions,
+    bool IsApplicable);
+
+/// <summary>
+/// Tổng hợp toàn bộ các bộ đề ôn tập (Điểm liệt, Hay sai, 6 Chương) được phân bổ theo một hạng GPLX cụ thể.
+/// </summary>
+public sealed record PracticeLicenseSummaryResponse(
+    string LicenseCode,
+    string LicenseName,
+    int TotalQuestions,
+    int CriticalQuizId,
+    int CriticalCount,
+    int FrequentMistakesQuizId,
+    int FrequentMistakesCount,
+    IReadOnlyList<PracticeChapterSummaryResponse> Chapters);
+
+/// <summary>
 /// Thông tin tóm tắt của một bộ đề thi hoặc bộ đề ôn tập công khai.
 /// </summary>
 public sealed record QuizSummaryResponse(

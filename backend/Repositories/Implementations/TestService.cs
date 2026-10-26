@@ -357,6 +357,17 @@ namespace QuizCarLicense.Repositories.Implementations
             return take;
         }
 
+        public async Task<LicenseClass?> GetLicenseClassWithAllowedQuestionsAsync(
+            string licenseCode,
+            CancellationToken ct)
+        {
+            var normalizedCode = licenseCode.Trim().ToUpperInvariant();
+            return await _context.LicenseClasses
+                .AsNoTracking()
+                .Include(l => l.AllowedQuestions)
+                .FirstOrDefaultAsync(l => l.Code == normalizedCode && l.Active, ct);
+        }
+
         public async Task<(Quiz TemplateQuiz, List<QuizQuestion> Questions)?> GenerateRandomExamByLicenseAsync(
             string licenseCode,
             CancellationToken ct)

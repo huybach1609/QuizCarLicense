@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Link } from "@/i18n/routing";
-import type { LicenseClass, QuizSummary } from "@/lib/api-client";
+import type { LicenseClass, QuizSummary, PracticeLicenseSummary } from "@/lib/api-client";
 import {
   Clock,
   HelpCircle,
@@ -20,7 +20,36 @@ import {
 interface LicenseSelectorBoardProps {
   licenses: LicenseClass[];
   quizzes: QuizSummary[];
+  practiceMatrix?: Record<string, PracticeLicenseSummary>;
 }
+
+const MOTORBIKE_FALLBACK_PRACTICE = {
+  totalQuestions: 250,
+  criticalCount: 53,
+  frequentMistakesCount: 32,
+  chapters: {
+    1: { totalQuestions: 100, isApplicable: true },
+    2: { totalQuestions: 10, isApplicable: true },
+    3: { totalQuestions: 15, isApplicable: true },
+    4: { totalQuestions: 0, isApplicable: false },
+    5: { totalQuestions: 90, isApplicable: true },
+    6: { totalQuestions: 35, isApplicable: true },
+  } as Record<number, { totalQuestions: number; isApplicable: boolean }>,
+};
+
+const CAR_FALLBACK_PRACTICE = {
+  totalQuestions: 600,
+  criticalCount: 60,
+  frequentMistakesCount: 50,
+  chapters: {
+    1: { totalQuestions: 180, isApplicable: true },
+    2: { totalQuestions: 25, isApplicable: true },
+    3: { totalQuestions: 58, isApplicable: true },
+    4: { totalQuestions: 37, isApplicable: true },
+    5: { totalQuestions: 185, isApplicable: true },
+    6: { totalQuestions: 115, isApplicable: true },
+  } as Record<number, { totalQuestions: number; isApplicable: boolean }>,
+};
 
 const FALLBACK_LICENSES: LicenseClass[] = [
   { licenseClassId: 1, code: "A1", name: "Hạng A1", vehicleGroup: "Motorbike", totalQuestions: 40, durationMinutes: 27, passScore: 36, displayOrder: 1, examSetCount: 6, description: "Xe mô tô hai bánh có dung tích xi-lanh đến 125 cm³ hoặc công suất động cơ điện đến 11 kW." },
@@ -39,6 +68,7 @@ const FALLBACK_LICENSES: LicenseClass[] = [
 export function LicenseSelectorBoard({
   licenses,
   quizzes,
+  practiceMatrix,
 }: LicenseSelectorBoardProps) {
   const licenseList = licenses.length > 0 ? licenses : FALLBACK_LICENSES;
   const [selectedCode, setSelectedCode] = useState<string>("B");
@@ -50,6 +80,33 @@ export function LicenseSelectorBoard({
       licenseList[0],
     [licenseList, selectedCode]
   );
+
+  // Thống kê ôn tập động theo Hạng GPLX được chọn
+  const currentPractice = useMemo(() => {
+    if (activeLicense && practiceMatrix && practiceMatrix[activeLicense.code]) {
+      return practiceMatrix[activeLicense.code];
+    }
+    const isMoto = activeLicense?.vehicleGroup === "Motorbike";
+    const fb = isMoto ? MOTORBIKE_FALLBACK_PRACTICE : CAR_FALLBACK_PRACTICE;
+    return {
+      licenseCode: activeLicense?.code ?? "B",
+      licenseName: activeLicense?.name ?? "Hạng B",
+      totalQuestions: fb.totalQuestions,
+      criticalQuizId: 0,
+      criticalCount: fb.criticalCount,
+      frequentMistakesQuizId: 0,
+      frequentMistakesCount: fb.frequentMistakesCount,
+      chapters: Object.entries(fb.chapters).map(([examNum, info]) => ({
+        quizId: 0,
+        examNumber: Number(examNum),
+        categoryCode: `CH${examNum}`,
+        title: "",
+        detail: "",
+        totalQuestions: info.totalQuestions,
+        isApplicable: info.isApplicable,
+      })),
+    };
+  }, [activeLicense, practiceMatrix]);
 
   // Bộ đề sát hạch cố định của hạng đang chọn
   const officialExams = useMemo(
@@ -85,13 +142,37 @@ export function LicenseSelectorBoard({
     [quizzes]
   );
 
-  const chapterPracticeQuizzes = useMemo(
-    () =>
-      quizzes
-        .filter((q) => q.quizType === "ChapterPractice")
-        .sort((a, b) => (a.examNumber ?? 99) - (b.examNumber ?? 99)),
-    [quizzes]
-  );
+  const chapterPracticeQuizzes = useMemo(() => {
+    // Nhóm các đề ôn tập theo examNumber để tránh trùng lặp
+    const map = new Map<number, QuizSummary>();
+    for (const q of quizzes) {
+      if (q.quizType === "ChapterPractice" && q.examNumber) {
+        if (!map.has(q.examNumber)) {
+          map.set(q.examNumber, q);
+        }
+      }
+    }
+
+    // Đảm bảo đủ danh sách theo ma trận chương từ backend
+    if (currentPractice?.chapters) {
+      for (const ch of currentPractice.chapters) {
+        if (!map.has(ch.examNumber)) {
+          map.set(ch.examNumber, {
+            quizId: ch.quizId,
+            title: ch.title || `Chương ${ch.examNumber}`,
+            detail: ch.detail || "",
+            totalQuestions: ch.totalQuestions,
+            updatedAt: null,
+            quizType: "ChapterPractice",
+            examNumber: ch.examNumber,
+            isPracticeMode: true,
+          });
+        }
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => (a.examNumber ?? 99) - (b.examNumber ?? 99));
+  }, [quizzes, currentPractice]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -309,23 +390,34 @@ export function LicenseSelectorBoard({
 
       {/* 4. Khu vực Ôn tập theo Chương & Bộ Câu Hỏi Điểm Liệt (Chế độ Practice) */}
       <div className="flex flex-col gap-4 pt-2">
-        <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+        <div className="flex items-center justify-between border-b border-border/70 pb-2.5 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-primary" />
             <h3 className="text-base font-bold text-foreground">
-              Ôn Tập Theo Chương & Chủ Đề Trọng Tâm (Chấm Đáp Án Tức Thì)
+              Ôn Tập Theo Chương & Điểm Liệt — {activeLicense?.name}
             </h3>
+            <span className="text-xs text-primary font-semibold tabular-nums px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
+              {currentPractice.totalQuestions} câu hỏi chuẩn
+            </span>
           </div>
-          <span className="text-xs text-primary font-medium hidden sm:inline">
-            Chọn đáp án hiện Đúng/Sai & Giải thích ngay
+          <span className="text-xs text-muted-foreground hidden sm:inline">
+            Chọn đáp án hiện Đúng/Sai & Giải thích ngay • Đã lọc riêng cho {activeLicense?.name}
           </span>
         </div>
 
-        {/* 2 Bộ đề đặc biệt: 60 Câu Điểm Liệt & 50 Câu Hay Sai */}
+        {/* 2 Bộ đề đặc biệt: Câu Điểm Liệt & Câu Hay Sai */}
         {specialPracticeQuizzes.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <div className="flex flex-col gap-2 pt-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              ⭐ Chuyên đề ôn tập trọng tâm (Trích lọc từ kho {currentPractice.totalQuestions} câu)
+            </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {specialPracticeQuizzes.map((quiz) => {
               const isCriticalQuiz = quiz.quizType === "CriticalPractice";
+              const questionCount = isCriticalQuiz
+                ? currentPractice.criticalCount
+                : currentPractice.frequentMistakesCount;
+
               return (
                 <div
                   key={quiz.quizId}
@@ -349,20 +441,22 @@ export function LicenseSelectorBoard({
                         )}
                         <span>
                           {isCriticalQuiz
-                            ? "Bắt buộc học kỹ (60 Câu Điểm Liệt)"
-                            : "Tổng hợp hay nhầm lẫn"}
+                            ? `Bắt buộc học kỹ (${questionCount} Câu Điểm Liệt)`
+                            : `Tổng hợp hay nhầm lẫn (${questionCount} câu)`}
                         </span>
                       </span>
                       <span className="text-xs font-mono tabular-nums text-muted-foreground">
-                        {quiz.totalQuestions} câu hỏi
+                        {questionCount} câu hỏi
                       </span>
                     </div>
 
                     <h4 className="text-sm font-bold text-foreground">
-                      {quiz.title}
+                      {quiz.title} — {activeLicense?.name}
                     </h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      {quiz.detail}
+                      {isCriticalQuiz
+                        ? `Tổng hợp ${questionCount} câu hỏi tình huống mất an toàn giao thông nghiêm trọng dành riêng cho sát hạch ${activeLicense?.name}. Sai 1 câu sẽ bị đánh giá Không đạt.`
+                        : `Tổng hợp ${questionCount} câu hỏi lý thuyết, biển báo và sa hình thường xuyên bị trả lời sai nhiều nhất của ${activeLicense?.name}.`}
                     </p>
                   </div>
 
@@ -371,7 +465,7 @@ export function LicenseSelectorBoard({
                       Chế độ Ôn tập: Xem đáp án ngay
                     </span>
                     <Link
-                      href={`/thi-sat-hach/${quiz.quizId}`}
+                      href={`/thi-sat-hach/${quiz.quizId}?licenseCode=${activeLicense?.code}`}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                         isCriticalQuiz
                           ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -385,50 +479,108 @@ export function LicenseSelectorBoard({
                 </div>
               );
             })}
+            </div>
           </div>
         )}
 
         {/* 6 Chương kiến thức chuẩn Bộ Công An */}
         {chapterPracticeQuizzes.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {chapterPracticeQuizzes.map((quiz) => (
-              <div
-                key={quiz.quizId}
-                className="p-4 rounded-lg border border-border/80 bg-card hover:border-primary/40 transition-all flex flex-col justify-between gap-3"
-              >
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted text-foreground">
-                      Chương {quiz.examNumber}
-                    </span>
-                    <span className="tabular-nums font-medium">
-                      {quiz.totalQuestions} câu hỏi
-                    </span>
+          <div className="flex flex-col gap-2 pt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                📚 Toàn bộ {currentPractice.totalQuestions} câu hỏi lý thuyết phân theo {chapterPracticeQuizzes.length} chương chuẩn
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                Tổng cộng các chương = {currentPractice.totalQuestions} câu duy nhất
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {chapterPracticeQuizzes.map((quiz) => {
+              const chapterInfo = currentPractice.chapters.find(
+                (c) => c.quizId === quiz.quizId || c.examNumber === quiz.examNumber
+              );
+              const isApplicable = chapterInfo ? chapterInfo.isApplicable : true;
+              const chapterQuestionCount = chapterInfo
+                ? chapterInfo.totalQuestions
+                : quiz.totalQuestions;
+
+              if (!isApplicable) {
+                return (
+                  <div
+                    key={quiz.quizId}
+                    className="p-4 rounded-lg border border-border/50 bg-muted/20 opacity-70 flex flex-col justify-between gap-3"
+                  >
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          Chương {quiz.examNumber}
+                        </span>
+                        <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                          Không thi ở {activeLicense?.name}
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm font-semibold text-foreground/80 line-clamp-1">
+                        {quiz.title}
+                      </h4>
+
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Nội dung Cấu tạo & Sửa chữa chỉ áp dụng cho nhóm xe Ô tô (Hạng B, C, D...). Thí sinh {activeLicense?.name} không phải thi phần này.
+                      </p>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-border/30 flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">
+                        Được miễn trừ sát hạch
+                      </span>
+                      <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded bg-muted/60">
+                        Không áp dụng
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={quiz.quizId}
+                  className="p-4 rounded-lg border border-border/80 bg-card hover:border-primary/40 transition-all flex flex-col justify-between gap-3"
+                >
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted text-foreground">
+                        Chương {quiz.examNumber}
+                      </span>
+                      <span className="tabular-nums font-medium">
+                        {chapterQuestionCount} câu hỏi
+                      </span>
+                    </div>
+
+                    <h4 className="text-sm font-semibold text-foreground line-clamp-1">
+                      {quiz.title}
+                    </h4>
+
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {quiz.detail}
+                    </p>
                   </div>
 
-                  <h4 className="text-sm font-semibold text-foreground line-clamp-1">
-                    {quiz.title}
-                  </h4>
-
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {quiz.detail}
-                  </p>
+                  <div className="pt-2.5 border-t border-border/40 flex items-center justify-between">
+                    <span className="text-[11px] text-primary font-medium">
+                      Hiện đáp án tức thì
+                    </span>
+                    <Link
+                      href={`/thi-sat-hach/${quiz.quizId}?licenseCode=${activeLicense?.code}`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-foreground hover:text-primary transition-colors"
+                    >
+                      <span>Luyện chương này</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
-
-                <div className="pt-2.5 border-t border-border/40 flex items-center justify-between">
-                  <span className="text-[11px] text-primary font-medium">
-                    Hiện đáp án tức thì
-                  </span>
-                  <Link
-                    href={`/thi-sat-hach/${quiz.quizId}`}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-foreground hover:text-primary transition-colors"
-                  >
-                    <span>Luyện chương này</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
+            </div>
           </div>
         )}
       </div>

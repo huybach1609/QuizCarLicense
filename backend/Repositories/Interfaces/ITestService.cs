@@ -52,5 +52,12 @@ namespace QuizCarLicense.Repositories.Interfaces
         Task<(Quiz TemplateQuiz, List<QuizQuestion> Questions)?> GenerateRandomExamByLicenseAsync(
             string licenseCode,
             CancellationToken ct);
+
+        /// <summary>
+        /// Lấy thông tin Hạng GPLX kèm danh sách AllowedQuestions để lọc câu hỏi thực hành theo hạng.
+        /// </summary>
+        Task<LicenseClass?> GetLicenseClassWithAllowedQuestionsAsync(
+            string licenseCode,
+            CancellationToken ct);
     }
 }

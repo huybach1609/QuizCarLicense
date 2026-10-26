@@ -7,11 +7,16 @@ import type { Metadata } from "next";
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ licenseCode?: string }>;
 }): Promise<Metadata> {
   const { locale, id } = await params;
-  const { data: quiz } = await fetchApi<QuizExamDetail>(`/api/v1/quizzes/${id}`, {
+  const { licenseCode } = (await searchParams) || {};
+  const query = licenseCode ? `?licenseCode=${encodeURIComponent(licenseCode)}` : "";
+
+  const { data: quiz } = await fetchApi<QuizExamDetail>(`/api/v1/quizzes/${id}${query}`, {
     cache: "no-store",
   });
 
@@ -29,13 +34,17 @@ export async function generateMetadata({
 
 export default async function ExamPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ licenseCode?: string }>;
 }) {
   const { locale, id } = await params;
+  const { licenseCode } = (await searchParams) || {};
   setRequestLocale(locale);
 
-  const { data: quiz } = await fetchApi<QuizExamDetail>(`/api/v1/quizzes/${id}`, {
+  const query = licenseCode ? `?licenseCode=${encodeURIComponent(licenseCode)}` : "";
+  const { data: quiz } = await fetchApi<QuizExamDetail>(`/api/v1/quizzes/${id}${query}`, {
     cache: "no-store",
   });
 

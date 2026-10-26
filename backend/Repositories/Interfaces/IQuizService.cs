@@ -18,6 +18,16 @@ namespace QuizCarLicense.Repositories.Interfaces
         Task<IReadOnlyList<QuizSummaryResponse>> GetPublicQuizSummariesAsync(CancellationToken ct = default);
 
         /// <summary>
+        /// Retrieves dynamic practice summaries grouped by license classes (Thông tư 108/2026/TT-BCA).
+        /// </summary>
+        Task<IReadOnlyDictionary<string, PracticeLicenseSummaryResponse>> GetPracticeMatrixAsync(CancellationToken ct = default);
+
+        /// <summary>
+        /// Retrieves practice summary for a specific license class.
+        /// </summary>
+        Task<PracticeLicenseSummaryResponse?> GetPracticeSummaryByLicenseAsync(string licenseCode, CancellationToken ct = default);
+
+        /// <summary>
         /// Retrieves quizzes by user ID.
         /// </summary>
         /// <param name="userId">User ID.</param>

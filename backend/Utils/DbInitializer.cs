@@ -68,11 +68,19 @@ public static class DbInitializer
                 }
             }
 
-            // Gỡ bỏ các chương thừa không còn trong chuẩn mới (ví dụ CH2_TRANSPORT cũ của bộ 7 chương)
+            // Gỡ bỏ các chương thừa không còn trong file categories.json (và dọn sạch Quiz liên quan để tránh bị mồ côi)
             var newCatCodes = seedCats.Select(c => c.Code).ToHashSet();
             var obsoleteCats = existingCats.Where(c => !newCatCodes.Contains(c.Code)).ToList();
             if (obsoleteCats.Count > 0)
             {
+                var obsoleteCatIds = obsoleteCats.Select(c => c.CategoryId).ToHashSet();
+                var obsoleteQuizzesByCat = await context.Quizzes
+                    .Where(q => q.CategoryId.HasValue && obsoleteCatIds.Contains(q.CategoryId.Value))
+                    .ToListAsync();
+                if (obsoleteQuizzesByCat.Count > 0)
+                {
+                    context.Quizzes.RemoveRange(obsoleteQuizzesByCat);
+                }
                 context.QuestionCategories.RemoveRange(obsoleteCats);
             }
 
@@ -335,20 +343,26 @@ public static class DbInitializer
             quizSaiNhieu.Questions = saiNhieuQuestions;
         }
 
-        // Đồng bộ 6 Bộ đề Ôn tập theo Chương (ChapterPractice)
+        // Đồng bộ 6 Bộ đề Ôn tập theo Chương (ChapterPractice) - Đảm bảo chỉ có ĐÚNG 6 bộ đề cho 6 chương
         var categoriesList = await context.QuestionCategories.OrderBy(c => c.DisplayOrder).ToListAsync();
-        var existingChapterQuizzes = await context.Quizzes
+        var allChapterQuizzes = await context.Quizzes
             .Where(q => q.QuizType == QuizTypes.ChapterPractice)
             .Include(q => q.Questions)
             .ToListAsync();
 
+        var keptChapterQuizIds = new HashSet<int>();
+
         foreach (var cat in categoriesList)
         {
             var catQuestions = allQuestions.Where(q => q.CategoryId == cat.CategoryId).ToList();
-            var existingCh = existingChapterQuizzes.FirstOrDefault(q => q.CategoryId == cat.CategoryId);
+            var existingCh = allChapterQuizzes
+                .Where(q => q.CategoryId == cat.CategoryId || (q.ExamNumber == cat.DisplayOrder && !keptChapterQuizIds.Contains(q.QuizId)))
+                .OrderBy(q => q.QuizId)
+                .FirstOrDefault();
+
             if (existingCh == null)
             {
-                context.Quizzes.Add(new Quiz
+                var newQuiz = new Quiz
                 {
                     Title = cat.Title,
                     Detail = cat.Description ?? $"Ôn tập toàn bộ {catQuestions.Count} câu hỏi thuộc {cat.Title}.",
@@ -361,26 +375,33 @@ public static class DbInitializer
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     Questions = catQuestions
-                });
+                };
+                context.Quizzes.Add(newQuiz);
             }
             else
             {
                 existingCh.Title = cat.Title;
                 existingCh.Detail = cat.Description ?? $"Ôn tập toàn bộ {catQuestions.Count} câu hỏi thuộc {cat.Title}.";
+                existingCh.CategoryId = cat.CategoryId;
+                existingCh.ExamNumber = cat.DisplayOrder;
                 existingCh.PassScore = catQuestions.Count;
                 existingCh.Questions = catQuestions;
+                keptChapterQuizIds.Add(existingCh.QuizId);
             }
         }
 
-        // Xóa các đề ôn tập chương cũ không còn trong danh mục (ví dụ chương 7 cũ)
-        var validCatIds = categoriesList.Select(c => c.CategoryId).ToHashSet();
-        var obsoleteChQuizzes = existingChapterQuizzes.Where(q => q.CategoryId.HasValue && !validCatIds.Contains(q.CategoryId.Value)).ToList();
-        if (obsoleteChQuizzes.Count > 0)
-        {
-            context.Quizzes.RemoveRange(obsoleteChQuizzes);
-        }
-
         await context.SaveChangesAsync();
+
+        // Xóa triệt để TẤT CẢ các đề ôn tập chương thừa, đề mồ côi (CategoryId null) hoặc Chương 7 cũ
+        var obsoleteQuizzes = await context.Quizzes
+            .Where(q => q.QuizType == QuizTypes.ChapterPractice && (!q.CategoryId.HasValue || !keptChapterQuizIds.Contains(q.QuizId)))
+            .ToListAsync();
+
+        if (obsoleteQuizzes.Count > 0)
+        {
+            context.Quizzes.RemoveRange(obsoleteQuizzes);
+            await context.SaveChangesAsync();
+        }
 
         // 6. Khởi tạo / Đồng bộ Bộ đề Cố định từ exam_presets.json & Đề Ngẫu Nhiên cho 11 Hạng
         var presetFilePath = FindDemoFile("exam_presets.json");

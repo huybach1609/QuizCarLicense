@@ -28,6 +28,27 @@ export interface QuestionCategory {
   practiceQuizId: number | null;
 }
 
+export interface PracticeChapterSummary {
+  quizId: number;
+  examNumber: number;
+  categoryCode: string;
+  title: string;
+  detail: string;
+  totalQuestions: number;
+  isApplicable: boolean;
+}
+
+export interface PracticeLicenseSummary {
+  licenseCode: string;
+  licenseName: string;
+  totalQuestions: number;
+  criticalQuizId: number;
+  criticalCount: number;
+  frequentMistakesQuizId: number;
+  frequentMistakesCount: number;
+  chapters: PracticeChapterSummary[];
+}
+
 export interface QuizSummary {
   quizId: number;
   title: string;

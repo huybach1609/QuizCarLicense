@@ -22,6 +22,7 @@ interface ExamStoreState {
     questionIds?: number[]
   ) => void;
   selectAnswer: (questionId: number, answerId: number) => void;
+  toggleAnswer: (questionId: number, answerId: number) => void;
   toggleFlag: (questionId: number) => void;
   setCurrentIndex: (index: number) => void;
   clearSession: () => void;
@@ -70,6 +71,26 @@ export const useExamStore = create<ExamStoreState>()(
               ...session.selectedAnswers,
               [questionId]: answerId,
             },
+          },
+        });
+      },
+
+      toggleAnswer: (questionId: number, answerId: number) => {
+        const session = get().currentSession;
+        if (!session) return;
+
+        const current = session.selectedAnswers[questionId];
+        const newSelected = { ...session.selectedAnswers };
+        if (current === answerId) {
+          delete newSelected[questionId];
+        } else {
+          newSelected[questionId] = answerId;
+        }
+
+        set({
+          currentSession: {
+            ...session,
+            selectedAnswers: newSelected,
           },
         });
       },

@@ -9,7 +9,7 @@ public partial class QuestionCategory
 {
     public int CategoryId { get; set; }
 
-    /// <summary>Mã chương (CH1_RULES, CH2_TRANSPORT, CH3_CULTURE, CH4_TECHNIQUE, CH5_STRUCTURE, CH6_SIGNS, CH7_SAHINH).</summary>
+    /// <summary>Mã chương (CH1_RULES, CH2_CULTURE, CH3_TECHNIQUE, CH4_STRUCTURE, CH5_SIGNS, CH6_SAHINH).</summary>
     public string Code { get; set; } = null!;
 
     /// <summary>Tên chương hiển thị (VD: Chương I: Quy định chung và quy tắc giao thông).</summary>

@@ -45,7 +45,7 @@ public sealed class QuizzesController : ControllerBase
         if (!string.IsNullOrWhiteSpace(licenseCode))
         {
             var code = licenseCode.Trim().ToUpperInvariant();
-            filtered = filtered.Where(q => string.Equals(q.LicenseClassCode, code, StringComparison.OrdinalIgnoreCase));
+            filtered = filtered.Where(q => string.Equals(q.LicenseClassCode, code, StringComparison.OrdinalIgnoreCase) || q.IsPracticeMode);
         }
 
         if (!string.IsNullOrWhiteSpace(quizType))
@@ -57,13 +57,55 @@ public sealed class QuizzesController : ControllerBase
     }
 
     /// <summary>
+    /// Lấy ma trận tổng hợp số lượng câu hỏi ôn tập (Điểm liệt, Hay sai, 6 Chương) của tất cả 11 hạng GPLX.
+    /// </summary>
+    [HttpGet("practice-matrix")]
+    [OutputCache(PolicyName = "QuizzesCache")]
+    [ProducesResponseType(typeof(IReadOnlyDictionary<string, PracticeLicenseSummaryResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyDictionary<string, PracticeLicenseSummaryResponse>>> GetPracticeMatrix(CancellationToken ct = default)
+    {
+        var matrix = await _quizService.GetPracticeMatrixAsync(ct);
+        return Ok(matrix);
+    }
+
+    /// <summary>
+    /// Lấy danh sách tổng hợp các bộ đề ôn tập được lọc theo một Hạng GPLX cụ thể.
+    /// </summary>
+    [HttpGet("practice")]
+    [OutputCache(PolicyName = "QuizzesCache")]
+    [ProducesResponseType(typeof(PracticeLicenseSummaryResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PracticeLicenseSummaryResponse>> GetPracticeSummary(
+        [FromQuery] string? licenseCode = null,
+        CancellationToken ct = default)
+    {
+        var code = string.IsNullOrWhiteSpace(licenseCode) ? "B" : licenseCode.Trim().ToUpperInvariant();
+        var summary = await _quizService.GetPracticeSummaryByLicenseAsync(code, ct);
+        if (summary is null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Title = "Không tìm thấy hạng giấy phép lái xe",
+                Detail = $"Không tìm thấy thông tin ôn tập cho hạng '{licenseCode}'.",
+                Instance = HttpContext.Request.Path
+            });
+        }
+        return Ok(summary);
+    }
+
+    /// <summary>
     /// Lấy chi tiết đề thi và danh sách câu hỏi để bắt đầu làm bài.
     /// Nếu đề có loại RandomTemplate, tự động rút ngẫu nhiên bộ câu hỏi theo ma trận của hạng bằng.
+    /// Hỗ trợ lọc động theo hạng GPLX khi ở chế độ ôn tập (IsPracticeMode).
     /// </summary>
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(QuizExamDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<QuizExamDetailResponse>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<QuizExamDetailResponse>> GetById(
+        int id,
+        [FromQuery] string? licenseCode = null,
+        CancellationToken ct = default)
     {
         var quiz = await _testService.GetQuizWithQuestionsAsync(id, ct);
         if (quiz is null)
@@ -106,6 +148,34 @@ public sealed class QuizzesController : ControllerBase
                 Explanation: isPractice ? q.Explanation : null,
                 CorrectAnswerId: isPractice ? q.Answers.FirstOrDefault(a => a.IsCorrect)?.Id : null
             )).ToList();
+        }
+
+        // Lọc động câu hỏi ôn tập theo Hạng Giấy phép lái xe nếu có yêu cầu
+        if (isPractice && !string.IsNullOrWhiteSpace(licenseCode))
+        {
+            var license = await _testService.GetLicenseClassWithAllowedQuestionsAsync(licenseCode, ct);
+            if (license != null && license.AllowedQuestions.Count > 0)
+            {
+                var allowedIds = license.AllowedQuestions.Select(aq => aq.QuestionId).ToHashSet();
+                examQuestions = examQuestions.Where(q => allowedIds.Contains(q.Id)).ToList();
+
+                var responseWithLicense = new QuizExamDetailResponse(
+                    QuizId: quiz.QuizId,
+                    Title: $"{quiz.Title} ({license.Name})",
+                    Detail: examQuestions.Count > 0
+                        ? $"{quiz.Detail} — Lọc theo chuẩn sát hạch {license.Name} ({examQuestions.Count} câu hỏi chuẩn)."
+                        : $"Nội dung ôn tập này không áp dụng cho {license.Name}.",
+                    TotalQuestions: examQuestions.Count,
+                    Questions: examQuestions,
+                    LicenseClassCode: license.Code,
+                    LicenseClassName: license.Name,
+                    QuizType: quiz.QuizType,
+                    DurationMinutes: quiz.DurationMinutes,
+                    PassScore: examQuestions.Count,
+                    IsPracticeMode: isPractice);
+
+                return Ok(responseWithLicense);
+            }
         }
 
         var response = new QuizExamDetailResponse(

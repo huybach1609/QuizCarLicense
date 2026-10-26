@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/routing";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { fetchApi, type LicenseClass, type QuizSummary } from "@/lib/api-client";
+import { fetchApi, type LicenseClass, type QuizSummary, type PracticeLicenseSummary } from "@/lib/api-client";
 import { LicenseSelectorBoard } from "@/components/home/license-selector-board";
 import { BookOpen } from "lucide-react";
 
@@ -13,11 +13,14 @@ export default async function HomePage({
   setRequestLocale(locale);
   const t = await getTranslations("Home");
 
-  const [{ data: licenses }, { data: quizzes }] = await Promise.all([
+  const [{ data: licenses }, { data: quizzes }, { data: practiceMatrix }] = await Promise.all([
     fetchApi<LicenseClass[]>("/api/v1/license-classes", {
       next: { revalidate: 300 },
     }),
     fetchApi<QuizSummary[]>("/api/v1/quizzes", {
+      next: { revalidate: 300 },
+    }),
+    fetchApi<Record<string, PracticeLicenseSummary>>("/api/v1/quizzes/practice-matrix", {
       next: { revalidate: 300 },
     }),
   ]);
@@ -56,6 +59,7 @@ export default async function HomePage({
       <LicenseSelectorBoard
         licenses={licenses ?? []}
         quizzes={quizzes ?? []}
+        practiceMatrix={practiceMatrix ?? {}}
       />
     </div>
   );
