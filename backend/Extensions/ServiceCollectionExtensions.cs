@@ -127,6 +127,20 @@ public static class ServiceCollectionExtensions
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ClockSkew = TimeSpan.FromMinutes(1)
             };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    // Ưu tiên Authorization header; nếu không có, đọc từ cookie qcl_access_token do BFF / Browser gửi kèm
+                    if (string.IsNullOrEmpty(context.Token) &&
+                        context.Request.Cookies.TryGetValue("qcl_access_token", out var cookieToken) &&
+                        !string.IsNullOrWhiteSpace(cookieToken))
+                    {
+                        context.Token = cookieToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
 
         services.AddAuthorizationBuilder()

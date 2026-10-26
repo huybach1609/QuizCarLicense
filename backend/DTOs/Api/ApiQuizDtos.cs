@@ -84,3 +84,24 @@ public sealed record TestSubmitResultResponse(
     DateTimeOffset StartedAt,
     DateTimeOffset CompletedAt,
     IReadOnlyList<GradedQuestionResponse> Questions);
+
+
+/// <summary>
+/// Chi tiết câu hỏi công khai kèm đáp án đúng phục vụ trang tra cứu và SEO.
+/// </summary>
+public sealed record PublicQuestionDetailResponse(
+    int QuestionId,
+    string Content,
+    int Score,
+    string? Image,
+    IReadOnlyList<GradedAnswerOptionResponse> Answers,
+    IReadOnlyList<string> InQuizzes);
+
+/// <summary>
+/// Tóm tắt câu hỏi công khai phục vụ sitemap và danh mục câu hỏi.
+/// </summary>
+public sealed record PublicQuestionItemResponse(
+    int QuestionId,
+    string Content,
+    int Score,
+    bool HasImage);

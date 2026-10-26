@@ -173,8 +173,8 @@ Khi toàn bộ API ở Giai đoạn 2 đã sẵn sàng và được kiểm thử
 - [x] **Task 2.2:** Xây dựng các API Controller (`/api/v1/auth`, `/api/v1/quizzes`, `/api/v1/takes`, `/api/v1/admin/quizzes`, `/api/v1/admin/questions`).
 - [x] **Task 2.3:** Chuyển luồng Guest Submit sang Stateless (trả kết quả trực tiếp qua JSON kèm chi tiết câu đúng/sai hoàn toàn trên RAM - Zero DB Read - thay vì lưu `HttpContext.Session`).
 
-### Bước 3: Xây dựng React App & Chuyển giao
-- [ ] **Task 3.1:** Khởi tạo project React + Vite + TypeScript + TailwindCSS (trong thư mục `ClientApp/` hoặc repo riêng).
-- [ ] **Task 3.2:** Xây dựng màn hình Làm bài thi (Quiz Engine) với Zustand persist (`localStorage`).
-- [ ] **Task 3.3:** Xây dựng màn hình Danh sách đề, Xem kết quả, Lịch sử thi và Quản trị (Admin).
-- [ ] **Task 3.4:** Gỡ bỏ thư mục `Pages/` (Razor Pages) sau khi React App đã thay thế hoàn toàn.
+### Bước 3: Xây dựng Frontend Hiện Đại (Next.js App Router + Song Ngữ + SEO) & Chuyển giao
+- [x] **Task 3.1:** Tái cấu trúc Monorepo (`backend/` + `frontend/`) & Khởi tạo Next.js App Router (TypeScript, Tailwind CSS, Lucide icons, next-intl song ngữ vi/en, Impeccable Design System).
+- [x] **Task 3.2:** Xây dựng màn hình Phòng thi sát hạch (Exam Engine) với Zustand persist (`localStorage`), phím tắt bàn phím (1-4, Mũi tên, F), đồng hồ đếm ngược `tabular-nums` và tự nộp bài khi hết giờ.
+- [x] **Task 3.3:** Xây dựng màn hình Danh sách đề thi SSR, Tra cứu ngân hàng 600 câu kèm Schema.org JSON-LD `QAPage` tối ưu SEO, Xem kết quả (Guest Stateless & Lưu DB), Lịch sử thi và Trang Quản trị (Admin Quizzes & Questions).
+- [ ] **Task 3.4:** Gỡ bỏ thư mục `backend/Pages/` (Razor Pages) sau giai đoạn nghiệm thu toàn diện (Hiện tại đang giữ Dual-mode chạy song song an toàn).

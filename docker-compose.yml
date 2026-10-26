@@ -1,6 +1,6 @@
-# ===========================
-# 📘 QuizCarLicense Stack
-# ===========================
+# ==============================================================================
+# 📘 QuizCarLicense Monorepo Stack (Next.js + .NET 8 Web API + PostgreSQL + Caddy)
+# ==============================================================================
 services:
   # ================= PostgreSQL Database =================
   postgres:
@@ -24,13 +24,12 @@ services:
     networks:
       - app-network
 
-  # ================= QuizCarLicense Web App =================
-  quizcarlicense:
-    image: weback1609/quizcarlicense:latest
+  # ================= Backend .NET 8 Web API =================
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: quizcarlicense
+    container_name: quizcarlicense-backend
     restart: unless-stopped
     depends_on:
       postgres:
@@ -40,10 +39,40 @@ services:
       ASPNETCORE_URLS: "http://+:6789"
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       TZ: "${TZ:-Asia/Ho_Chi_Minh}"
-      ConnectionStrings__Default: "${QUIZCAR_CONNECTION_DEFAULT:-Host=postgres;Port=5432;Database=quizcarlicense;Username=devuser;Password=123456}"
-      ConnectionStrings__Dev: "${QUIZCAR_CONNECTION_DEV:-Host=postgres;Port=5432;Database=quizcarlicense;Username=devuser;Password=123456}"
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=quizcarlicense;Username=devuser;Password=123456"
+      ConnectionStrings__Dev: "Host=postgres;Port=5432;Database=quizcarlicense;Username=devuser;Password=123456"
+    networks:
+      - app-network
+
+  # ================= Frontend Next.js Standalone =================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: quizcarlicense-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: "production"
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: "http://backend:6789"
+      BACKEND_INTERNAL_URL: "http://backend:6789"
+    networks:
+      - app-network
+
+  # ================= Caddy Reverse Proxy =================
+  proxy:
+    image: caddy:2-alpine
+    container_name: quizcarlicense-proxy
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
     ports:
-      - "6789:6789"
+      - "8080:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
       - app-network
 
