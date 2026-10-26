@@ -1,0 +1,123 @@
+[
+  {
+    "code": "A1",
+    "name": "Hạng A1",
+    "vehicleGroup": "Motorbike",
+    "totalQuestions": 40,
+    "durationMinutes": 27,
+    "passScore": 36,
+    "examSetCount": 8,
+    "displayOrder": 1,
+    "description": "Xe mô tô hai bánh có dung tích xi-lanh đến 125 cm³ hoặc công suất động cơ điện đến 11 kW."
+  },
+  {
+    "code": "A",
+    "name": "Hạng A",
+    "vehicleGroup": "Motorbike",
+    "totalQuestions": 40,
+    "durationMinutes": 27,
+    "passScore": 36,
+    "examSetCount": 8,
+    "displayOrder": 2,
+    "description": "Xe mô tô hai bánh có dung tích xi-lanh trên 125 cm³ hoặc công suất động cơ điện trên 11 kW và các loại xe hạng A1."
+  },
+  {
+    "code": "B",
+    "name": "Hạng B",
+    "vehicleGroup": "Car",
+    "totalQuestions": 30,
+    "durationMinutes": 20,
+    "passScore": 27,
+    "examSetCount": 20,
+    "displayOrder": 3,
+    "description": "Ô tô chở người đến 08 chỗ (không kể chỗ của người lái xe); xe ô tô tải và ô tô chuyên dùng có khối lượng toàn bộ theo thiết kế đến 3.500 kg."
+  },
+  {
+    "code": "C1",
+    "name": "Hạng C1",
+    "vehicleGroup": "Car",
+    "totalQuestions": 35,
+    "durationMinutes": 22,
+    "passScore": 32,
+    "examSetCount": 18,
+    "displayOrder": 4,
+    "description": "Ô tô tải và ô tô chuyên dùng có khối lượng toàn bộ theo thiết kế trên 3.500 kg đến 7.500 kg; các loại xe quy định cho giấy phép lái xe hạng B."
+  },
+  {
+    "code": "C",
+    "name": "Hạng C",
+    "vehicleGroup": "Car",
+    "totalQuestions": 40,
+    "durationMinutes": 24,
+    "passScore": 36,
+    "examSetCount": 15,
+    "displayOrder": 5,
+    "description": "Ô tô tải và ô tô chuyên dùng có khối lượng toàn bộ theo thiết kế trên 7.500 kg; các loại xe quy định cho giấy phép lái xe hạng B, C1."
+  },
+  {
+    "code": "D1",
+    "name": "Hạng D1",
+    "vehicleGroup": "Car",
+    "totalQuestions": 45,
+    "durationMinutes": 26,
+    "passScore": 41,
+    "examSetCount": 14,
+    "displayOrder": 6,
+    "description": "Ô tô chở người trên 08 chỗ đến 16 chỗ (không kể chỗ của người lái xe); các loại xe quy định cho giấy phép lái xe các hạng B, C1, C."
+  },
+  {
+    "code": "D2",
+    "name": "Hạng D2",
+    "vehicleGroup": "Car",
+    "totalQuestions": 45,
+    "durationMinutes": 26,
+    "passScore": 41,
+    "examSetCount": 14,
+    "displayOrder": 7,
+    "description": "Ô tô chở người (kể cả xe buýt) trên 16 chỗ đến 29 chỗ (không kể chỗ của người lái xe); các loại xe quy định cho hạng B, C1, C, D1."
+  },
+  {
+    "code": "D",
+    "name": "Hạng D",
+    "vehicleGroup": "Car",
+    "totalQuestions": 45,
+    "durationMinutes": 26,
+    "passScore": 41,
+    "examSetCount": 14,
+    "displayOrder": 8,
+    "description": "Ô tô chở người (kể cả xe buýt) trên 29 chỗ; xe ô tô chở người giường nằm; các loại xe quy định cho các hạng B, C1, C, D1, D2."
+  },
+  {
+    "code": "BE",
+    "name": "Hạng BE",
+    "vehicleGroup": "Car",
+    "totalQuestions": 45,
+    "durationMinutes": 26,
+    "passScore": 41,
+    "examSetCount": 14,
+    "displayOrder": 9,
+    "description": "Các loại xe ô tô quy định cho giấy phép lái xe hạng B kéo rơ moóc có khối lượng toàn bộ theo thiết kế trên 750 kg."
+  },
+  {
+    "code": "C1E",
+    "name": "Hạng C1E",
+    "vehicleGroup": "Car",
+    "totalQuestions": 45,
+    "durationMinutes": 26,
+    "passScore": 41,
+    "examSetCount": 14,
+    "displayOrder": 10,
+    "description": "Các loại xe ô tô quy định cho giấy phép lái xe hạng C1 kéo rơ moóc có khối lượng toàn bộ theo thiết kế trên 750 kg."
+  },
+  {
+    "code": "CE",
+    "name": "Hạng CE",
+    "vehicleGroup": "Car",
+    "totalQuestions": 45,
+    "durationMinutes": 26,
+    "passScore": 41,
+    "examSetCount": 14,
+    "displayOrder": 11,
+    "description": "Các loại xe ô tô quy định cho giấy phép lái xe hạng C kéo rơ moóc trên 750 kg; xe ô tô đầu kéo kéo sơ mi rơ moóc."
+  }
+]

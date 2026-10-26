@@ -1,0 +1,432 @@
+[
+  {
+    "licenseCode": "A1",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 12
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 13
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 10
+      }
+    ]
+  },
+  {
+    "licenseCode": "A",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 12
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 13
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 10
+      }
+    ]
+  },
+  {
+    "licenseCode": "B",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 8
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 9
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 9
+      }
+    ]
+  },
+  {
+    "licenseCode": "C1",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 10
+      }
+    ]
+  },
+  {
+    "licenseCode": "C",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 14
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 11
+      }
+    ]
+  },
+  {
+    "licenseCode": "D1",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 16
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 14
+      }
+    ]
+  },
+  {
+    "licenseCode": "D2",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 16
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 14
+      }
+    ]
+  },
+  {
+    "licenseCode": "D",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 16
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 14
+      }
+    ]
+  },
+  {
+    "licenseCode": "BE",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 16
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 14
+      }
+    ]
+  },
+  {
+    "licenseCode": "C1E",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 16
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 14
+      }
+    ]
+  },
+  {
+    "licenseCode": "CE",
+    "rules": [
+      {
+        "categoryCode": null,
+        "isCriticalPool": true,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH1_RULES",
+        "isCriticalPool": false,
+        "questionCount": 10
+      },
+      {
+        "categoryCode": "CH2_CULTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH3_TECHNIQUE",
+        "isCriticalPool": false,
+        "questionCount": 2
+      },
+      {
+        "categoryCode": "CH4_STRUCTURE",
+        "isCriticalPool": false,
+        "questionCount": 1
+      },
+      {
+        "categoryCode": "CH5_SIGNS",
+        "isCriticalPool": false,
+        "questionCount": 16
+      },
+      {
+        "categoryCode": "CH6_SAHINH",
+        "isCriticalPool": false,
+        "questionCount": 14
+      }
+    ]
+  }
+]

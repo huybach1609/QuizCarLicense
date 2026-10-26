@@ -1,0 +1,50 @@
+[
+  {
+    "code": "CH1_RULES",
+    "title": "Chương I: Quy định chung và quy tắc giao thông đường bộ",
+    "description": "Các quy tắc, khái niệm, tốc độ, khoảng cách và quy định an toàn khi tham gia giao thông (Câu 1 - 180)",
+    "displayOrder": 1,
+    "fromQuestionId": 1,
+    "toQuestionId": 180
+  },
+  {
+    "code": "CH2_CULTURE",
+    "title": "Chương II: Văn hóa giao thông, đạo đức người lái xe, PCCC & cứu hộ",
+    "description": "Đạo đức người lái xe, văn hóa ứng xử, kỹ năng phòng cháy chữa cháy và sơ cấp cứu tai nạn (Câu 181 - 205)",
+    "displayOrder": 2,
+    "fromQuestionId": 181,
+    "toQuestionId": 205
+  },
+  {
+    "code": "CH3_TECHNIQUE",
+    "title": "Chương III: Kỹ thuật lái xe",
+    "description": "Thao tác lái xe an toàn trên các điều kiện địa hình, thời tiết và xử lý tình huống khẩn cấp (Câu 206 - 263)",
+    "displayOrder": 3,
+    "fromQuestionId": 206,
+    "toQuestionId": 263
+  },
+  {
+    "code": "CH4_STRUCTURE",
+    "title": "Chương IV: Cấu tạo và sửa chữa",
+    "description": "Cấu tạo cơ bản của xe ô tô, kiểm tra bảo dưỡng và khắc phục sự cố kỹ thuật thông thường (Câu 264 - 300)",
+    "displayOrder": 4,
+    "fromQuestionId": 264,
+    "toQuestionId": 300
+  },
+  {
+    "code": "CH5_SIGNS",
+    "title": "Chương V: Báo hiệu đường bộ",
+    "description": "Hệ thống biển báo cấm, biển nguy hiểm, biển hiệu lệnh, biển chỉ dẫn, biển phụ và vạch kẻ đường (Câu 301 - 485)",
+    "displayOrder": 5,
+    "fromQuestionId": 301,
+    "toQuestionId": 485
+  },
+  {
+    "code": "CH6_SAHINH",
+    "title": "Chương VI: Giải thế sa hình và kỹ năng xử lý tình huống",
+    "description": "Quy tắc nhường đường tại nơi giao nhau và các tình huống giao thông thực tế (Câu 486 - 600)",
+    "displayOrder": 6,
+    "fromQuestionId": 486,
+    "toQuestionId": 600
+  }
+]
