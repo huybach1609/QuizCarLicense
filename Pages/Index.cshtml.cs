@@ -20,7 +20,7 @@ namespace QuizCarLicense.Pages
             _quizService = quizService;
         }
 
-        public List<Models.Take> ListTake { get; set; } = new List<Models.Take>();
+        public List<TakeHistoryDto> ListTake { get; set; } = new();
         public List<CardQuiz> ListCard { get; set; } = new();
         public bool IsLogin { get; private set; }
 
@@ -43,7 +43,7 @@ namespace QuizCarLicense.Pages
             // query take history by 5
             try
             {
-                ListTake = await _takeService.GetRecentTakesAsync(userId, 5, ct);
+                ListTake = await _takeService.GetUserTakesAsync(userId, 5, ct);
             }
             catch (Exception ex)
             {

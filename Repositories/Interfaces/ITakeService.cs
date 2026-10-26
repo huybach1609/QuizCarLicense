@@ -1,4 +1,4 @@
-﻿using QuizCarLicense.DTOs;
+using QuizCarLicense.DTOs;
 using QuizCarLicense.Models;
 
 namespace QuizCarLicense.Repositories.Interfaces
@@ -6,6 +6,8 @@ namespace QuizCarLicense.Repositories.Interfaces
     public interface ITakeService
     {
         Task<List<Take>> GetRecentTakesAsync(int userId, int count = 5, CancellationToken ct = default);
+
+        Task<List<TakeHistoryDto>> GetUserTakesAsync(int userId, int? limit = null, CancellationToken ct = default);
 
         Task<bool> CheckTakeAsync(int takeId, CancellationToken ct);
 

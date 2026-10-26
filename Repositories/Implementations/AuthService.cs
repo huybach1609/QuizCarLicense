@@ -21,12 +21,19 @@ namespace QuizCarLicense.Repositories.Implementations
 
         public async Task<MessageReturn> Login(string username, string password)
         {
-            var userDb = await _context.Users.FirstOrDefaultAsync(u =>
-            u.Username.Equals(username));
+            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(username));
             if (userDb == null)
                 return new MessageReturn { Message = "Account not exist", Result = false };
-            if (!userDb.Password.Equals(StringUtils.ComputeSha256Hash(password)))
+
+            var (isValid, needsRehash) = PasswordHelper.VerifyPassword(userDb, userDb.Password, password);
+            if (!isValid)
                 return new MessageReturn { Message = "Password is wrong", Result = false };
+
+            if (needsRehash)
+            {
+                userDb.Password = PasswordHelper.HashPassword(userDb, password);
+                await _context.SaveChangesAsync();
+            }
 
             // create claimsprincipal
             // id, name, email, role
@@ -34,17 +41,15 @@ namespace QuizCarLicense.Repositories.Implementations
             {
                 new (ClaimTypes.NameIdentifier, userDb.UserId.ToString()),
                 new (ClaimTypes.Name, userDb.Username),
-                new (ClaimTypes.Role, userDb.Role?.ToString()?? "User"),
+                new (ClaimTypes.Role, userDb.Role?.ToString() ?? "User"),
                 new ("FullName", userDb.FullName),
             };
             var claimsIdentity = new ClaimsIdentity(claims,
                 CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrinciple = new ClaimsPrincipal(claimsIdentity);
+            var userDto = new UserDto(userDb.UserId, userDb.Username, userDb.FullName, userDb.Role ?? "User");
 
-
-            Console.WriteLine($"set session : {userDb.Role.ToString()}");
-
-            return new LoginResponse { Result = true, claimsPrincipal = claimsPrinciple  };
+            return new LoginResponse { Result = true, claimsPrincipal = claimsPrinciple, User = userDto };
         }
 
         public MessageReturn Logout()
@@ -54,7 +59,7 @@ namespace QuizCarLicense.Repositories.Implementations
 
         public async Task<MessageReturn> Signup(CreateUserRequest request)
         {
-            var userDb =await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(request.UserName));
+            var userDb = await _context.Users.FirstOrDefaultAsync(u => u.Username.Equals(request.UserName));
             if (userDb != null)
             {
                 return new MessageReturn
@@ -67,11 +72,12 @@ namespace QuizCarLicense.Repositories.Implementations
             {
                 Username = request.UserName,
                 FullName = request.FullName,
-                Password = StringUtils.ComputeSha256Hash(request.Password ?? "123"),
                 Role = UserRole.User.ToString()
             };
+            user.Password = PasswordHelper.HashPassword(user, request.Password ?? "123");
+
             _context.Users.Add(user);
-           await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             return new MessageReturn
             {
                 Message = "Signup successful",
@@ -109,9 +115,9 @@ namespace QuizCarLicense.Repositories.Implementations
             {
                 Username = request.UserName,
                 FullName = request.FullName,
-                Password = StringUtils.ComputeSha256Hash(request.Password),
                 Role = UserRole.Admin.ToString()
             };
+            user.Password = PasswordHelper.HashPassword(user, request.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();

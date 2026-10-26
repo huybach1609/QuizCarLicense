@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model IndexModel
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
@@ -26,13 +26,13 @@
         {
             @foreach (var quizGroup in listTake.GroupBy(take => take.QuizId))
             {
-                int quizId = quizGroup.First().Quiz?.QuizId ?? 0;
-                int totalQuestion = quizGroup.First().Quiz?.Questions.Count ?? 0;
+                int quizId = quizGroup.Key;
+                int totalQuestion = quizGroup.First().TotalQuestions;
                 <h2 id="accordion-collapse-heading-@quizId">
                     <button type="button" class="border-b-0 flex w-full items-center justify-between gap-3 border border-gray-200 p-4 md:p-5 text-sm md:text-base font-medium text-gray-500 hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 rtl:text-right dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-800 dark:hover:bg-gray-800"
                             data-accordion-target="#accordion-collapse-body-@quizId" aria-expanded="true" aria-controls="accordion-collapse-body-@quizId">
                         <span>
-                            Quiz: @(quizGroup.First().Quiz?.Title ?? "No Title")
+                            Quiz: @quizGroup.First().QuizTitle
                         </span>
                         <svg data-accordion-icon class="shrink-0 h-3 w-3 rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5" />

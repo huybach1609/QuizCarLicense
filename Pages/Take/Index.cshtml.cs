@@ -1,39 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using QuizCarLicense.Filters;
-using QuizCarLicense.Models;
+using QuizCarLicense.DTOs;
 using QuizCarLicense.Repositories.Interfaces;
-using QuizCarLicense.Utils;
 using System.Security.Claims;
 
 namespace QuizCarLicense.Pages.Take
 {
     public class IndexModel : PageModel
     {
-        private readonly QuizCarLicenseContext _context;
+        private readonly ITakeService _takeService;
 
-        public IndexModel(QuizCarLicenseContext context)
+        public IndexModel(ITakeService takeService)
         {
-            _context = context;
+            _takeService = takeService;
         }
 
-        public List<Models.Take> ListTake { get; set; } = new List<Models.Take>();
-        public IActionResult OnGet()
+        public List<TakeHistoryDto> ListTake { get; set; } = new();
+
+        public async Task<IActionResult> OnGetAsync(CancellationToken ct)
         {
-            var user = User;
-            if (user == null)
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
             {
                 return RedirectToPage("/Error");
             }
-            int userId = Convert.ToInt32(user.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            ListTake = _context.Takes.Where(t => t.UserId == userId)
-                .Include(t => t.Quiz)
-                .ThenInclude(q => q.Questions)
-                .OrderByDescending(t => t.StartedAt)
-                .ToList();
 
+            ListTake = await _takeService.GetUserTakesAsync(userId, null, ct);
             return Page();
         }
     }
 }
+

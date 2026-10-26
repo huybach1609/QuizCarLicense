@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using QuizCarLicense.Constrains;
 using QuizCarLicense.DTOs;
 using QuizCarLicense.Models;
@@ -32,12 +32,40 @@ namespace QuizCarLicense.Repositories.Implementations
                  .Take(count)
                  .ToListAsync(ct);
         }
+
+        public async Task<List<TakeHistoryDto>> GetUserTakesAsync(int userId, int? limit = null, CancellationToken ct = default)
+        {
+            IQueryable<Take> query = _context.Takes.AsNoTracking()
+                .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.StartedAt);
+
+            if (limit.HasValue && limit.Value > 0)
+            {
+                query = query.Take(limit.Value);
+            }
+
+            return await query
+                .Select(t => new TakeHistoryDto
+                {
+                    TakeId = t.TakeId,
+                    QuizId = t.QuizId ?? 0,
+                    QuizTitle = t.Quiz != null ? t.Quiz.Title : "No Title",
+                    TotalQuestions = t.Quiz != null ? t.Quiz.Questions.Count : 0,
+                    Score = t.Score,
+                    StartedAt = t.StartedAt,
+                    FinishedAt = t.FinishedAt
+                })
+                .ToListAsync(ct);
+        }
+
         public async Task<bool> CheckTakeAsync(int takeId, CancellationToken ct)
-    => await _context.Takes.AsNoTracking()
-        .AnyAsync(t => t.TakeId == takeId, ct);
+            => await _context.Takes.AsNoTracking()
+                .AnyAsync(t => t.TakeId == takeId, ct);
 
         public async Task<Take?> GetTakeWithAnswersAsync(int takeId, CancellationToken ct)
             => await _context.Takes
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(t => t.Quiz)
                     .ThenInclude(q => q.User)
                 .Include(t => t.TakeAnswers)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,6 +73,8 @@ public partial class QuizCarLicenseContext : DbContext
 
             entity.ToTable("QuizAnswer");
 
+            entity.HasIndex(e => new { e.QuestionId, e.IsCorrect }).HasDatabaseName("IX_QuizAnswer_QuestionId_IsCorrect");
+
             entity.HasOne(d => d.Question).WithMany(p => p.QuizAnswers)
                 .HasForeignKey(d => d.QuestionId)
                 .OnDelete(DeleteBehavior.Cascade)
@@ -98,6 +100,8 @@ public partial class QuizCarLicenseContext : DbContext
             entity.HasKey(e => e.TakeId).HasName("PK__Take__AC0C21A0FF1E86DF");
 
             entity.ToTable("Take");
+
+            entity.HasIndex(e => new { e.UserId, e.StartedAt }).HasDatabaseName("IX_Take_UserId_StartedAt");
 
             entity.Property(e => e.FinishedAt).HasColumnType("timestamp with time zone");
             entity.Property(e => e.StartedAt).HasColumnType("timestamp with time zone");
@@ -132,6 +136,8 @@ public partial class QuizCarLicenseContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4C9DF8E4F5");
+
+            entity.HasIndex(e => e.Username).IsUnique().HasDatabaseName("IX_Users_Username");
 
             entity.Property(e => e.Password).IsUnicode(false);
             entity.Property(e => e.Role).HasMaxLength(50);

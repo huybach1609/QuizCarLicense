@@ -11,8 +11,8 @@ QuizCarLicense is an ASP.NET Core Razor Pages application designed to help Vietn
 
 ## Tech Stack
 - [.NET 8](https://dotnet.microsoft.com/) with ASP.NET Core Razor Pages
-- Entity Framework Core for data access
-- SQL Server (local or Azure) as the backing database
+- Entity Framework Core with Npgsql
+- PostgreSQL 16 as the backing database
 - Docker & Docker Compose for containerized deployments
 
 Link App [carquiz.weback1609.io.vn](https://carquiz.weback1609.io.vn/)
@@ -20,7 +20,7 @@ Link App [carquiz.weback1609.io.vn](https://carquiz.weback1609.io.vn/)
 ## Getting Started
 ### Prerequisites
 - .NET 8 SDK
-- SQL Server instance (LocalDB, Docker, or hosted)
+- PostgreSQL 16 instance (Docker or hosted)
 - Node.js & npm (for building static assets if you extend the front-end)
 - Docker (optional, for containerized workflows)
 
@@ -28,7 +28,7 @@ Link App [carquiz.weback1609.io.vn](https://carquiz.weback1609.io.vn/)
 ## Installation
 ### Run with Docker
 
-You can launch the published Docker image together with a SQL Server instance by using the provided [docker-compose.yml](https://github.com/huybach1609/QuizCarLicense/blob/main/docker-compose.yml) and [.env](https://github.com/huybach1609/QuizCarLicense/blob/main/sample%20(env)) template.
+You can launch the published Docker image together with a PostgreSQL instance by using the provided [docker-compose.yml](https://github.com/huybach1609/QuizCarLicense/blob/main/docker-compose.yml) and [.env](https://github.com/huybach1609/QuizCarLicense/blob/main/sample%20(env)) template.
 
 1. Copy the sample environment file and adjust the values for your environment (especially the passwords and data paths):
 
@@ -40,7 +40,7 @@ You can launch the published Docker image together with a SQL Server instance by
    ```bash
    docker compose up -d
    ```
-   This pulls the [`weback1609/quizcarlicense`](https://hub.docker.com/r/weback1609/quizcarlicense) image, provisions a SQL Server 2022 container, and binds the web app to `http://localhost:6789`.
+   This pulls the [`weback1609/quizcarlicense`](https://hub.docker.com/r/weback1609/quizcarlicense) image, provisions a PostgreSQL 16 container, and binds the web app to `http://localhost:6789`.
 3. Tear down the containers when you are done:
    ```bash
    docker compose down

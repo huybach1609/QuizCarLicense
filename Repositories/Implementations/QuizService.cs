@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using QuizCarLicense.Constrains;
 using QuizCarLicense.Models;
 using QuizCarLicense.Repositories.Interfaces;
@@ -8,21 +9,32 @@ namespace QuizCarLicense.Repositories.Implementations
 {
     public class QuizService : IQuizService
     {
-        private QuizCarLicenseContext _context;
+        private readonly QuizCarLicenseContext _context;
+        private readonly IMemoryCache _cache;
+        private const string CacheKeyAllQuizzes = "quizzes:all";
 
-        public QuizService(QuizCarLicenseContext context)
+        public QuizService(QuizCarLicenseContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         public async Task<List<Quiz>> GetAllAsync(CancellationToken ct = default)
         {
-            return await _context.Quizzes
+            if (_cache.TryGetValue(CacheKeyAllQuizzes, out List<Quiz>? cached) && cached != null)
+            {
+                return cached;
+            }
+
+            var list = await _context.Quizzes
                 .Include(q => q.User)
                 .Where(q => q.UserId == null || (q.User != null && q.User.Role == UserRole.Admin.ToString()))
                 .AsNoTracking()
                 .OrderByDescending(q => q.UpdatedAt)
                 .ToListAsync(ct);
+
+            _cache.Set(CacheKeyAllQuizzes, list, TimeSpan.FromMinutes(15));
+            return list;
         }
         public async Task<List<Quiz>> GetByUserAsync(int userId, CancellationToken ct = default)
         {
@@ -49,6 +61,7 @@ namespace QuizCarLicense.Repositories.Implementations
 
             _context.Quizzes.Add(quiz);
             await _context.SaveChangesAsync(ct);
+            InvalidateCache(quiz.QuizId);
             return true;
         }
 
@@ -63,6 +76,7 @@ namespace QuizCarLicense.Repositories.Implementations
             quizDb.UpdatedAt = DateTime.UtcNow;   // do NOT touch CreatedAt
 
             await _context.SaveChangesAsync(ct);
+            InvalidateCache(input.QuizId);
             return true;
         }
 
@@ -73,6 +87,7 @@ namespace QuizCarLicense.Repositories.Implementations
 
             _context.Quizzes.Remove(quizDb);
             await _context.SaveChangesAsync(ct);
+            InvalidateCache(id);
             return true;
         }
 
@@ -109,7 +124,15 @@ namespace QuizCarLicense.Repositories.Implementations
 
             quiz.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync(ct);
+            InvalidateCache(quizId);
             return true;
+        }
+
+        private void InvalidateCache(int quizId)
+        {
+            _cache.Remove(CacheKeyAllQuizzes);
+            _cache.Remove($"quiz:full:{quizId}");
+            _cache.Remove($"quiz:answer_key:{quizId}");
         }
     }
 }

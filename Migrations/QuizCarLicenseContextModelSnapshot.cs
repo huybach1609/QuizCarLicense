@@ -79,7 +79,8 @@ namespace QuizCarLicense.Migrations
                     b.HasKey("AnswerId")
                         .HasName("PK__QuizAnsw__D4825004E35FAA66");
 
-                    b.HasIndex("QuestionId");
+                    b.HasIndex("QuestionId", "IsCorrect")
+                        .HasDatabaseName("IX_QuizAnswer_QuestionId_IsCorrect");
 
                     b.ToTable("QuizAnswer", (string)null);
                 });
@@ -152,7 +153,8 @@ namespace QuizCarLicense.Migrations
 
                     b.HasIndex("QuizId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "StartedAt")
+                        .HasDatabaseName("IX_Take_UserId_StartedAt");
 
                     b.ToTable("Take", (string)null);
                 });
@@ -209,6 +211,10 @@ namespace QuizCarLicense.Migrations
 
                     b.HasKey("UserId")
                         .HasName("PK__Users__1788CC4C9DF8E4F5");
+
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_Username");
 
                     b.ToTable("Users");
                 });

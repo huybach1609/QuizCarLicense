@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using QuizCarLicense.Constrains;
 using QuizCarLicense.DTOs;
 using QuizCarLicense.Models;
@@ -9,14 +10,36 @@ namespace QuizCarLicense.Repositories.Implementations
     public sealed class TestService : ITestService
     {
         private readonly QuizCarLicenseContext _context;
-        public TestService(QuizCarLicenseContext context) => _context = context;
+        private readonly IMemoryCache _cache;
+
+        public TestService(QuizCarLicenseContext context, IMemoryCache cache)
+        {
+            _context = context;
+            _cache = cache;
+        }
 
         public async Task<Quiz?> GetQuizWithQuestionsAsync(int quizId, CancellationToken ct)
-            => await _context.Quizzes
+        {
+            string cacheKey = $"quiz:full:{quizId}";
+            if (_cache.TryGetValue(cacheKey, out Quiz? cachedQuiz) && cachedQuiz != null)
+            {
+                return cachedQuiz;
+            }
+
+            var quiz = await _context.Quizzes
+                .AsNoTracking()
                 .Include(q => q.User)
                 .Include(q => q.Questions)
                     .ThenInclude(q => q.QuizAnswers)
                 .FirstOrDefaultAsync(q => q.QuizId == quizId, ct);
+
+            if (quiz != null)
+            {
+                _cache.Set(cacheKey, quiz, TimeSpan.FromHours(1));
+            }
+
+            return quiz;
+        }
 
         public Task<List<QuestionDTO>> BuildTestQuestionsAsync(Quiz quiz, CancellationToken ct)
         {
@@ -38,83 +61,80 @@ namespace QuizCarLicense.Repositories.Implementations
             return Task.FromResult(list);
         }
 
-        public async Task<float> CalculateScoreAsync(TestResutlResponse result, CancellationToken ct)
+        private record QuizAnswerKeyCache(
+            Dictionary<int, int> AnswerToQuestionMap,
+            Dictionary<int, HashSet<int>> CorrectAnswersByQuestion);
+
+        private async Task<QuizAnswerKeyCache> GetQuizAnswerKeyAsync(int quizId, CancellationToken ct)
         {
-            //// Get all the answers the user chooses
-            //var selectedIds = result.ListAnswers.Select(a => a.AnswerId).ToList();
+            string cacheKey = $"quiz:answer_key:{quizId}";
+            if (_cache.TryGetValue(cacheKey, out QuizAnswerKeyCache? cachedKey) && cachedKey != null)
+            {
+                return cachedKey;
+            }
 
-            //// Get the corresponding correct answer list at once
-            //var correctIds = await _context.QuizAnswers
-            //    .Where(a => selectedIds.Contains(a.AnswerId) && a.IsCorrect)
-            //    .Select(a => a.AnswerId)
-            //    .ToListAsync(ct);
-
-            //return correctIds.Count; // each correct quizanswer +1
-
-
-
-            // All selected awner IDs froms sumitted result
-            var selectedAnswerIds = result.ListAnswers.Select(a => a.AnswerId).ToList();
-
-            // create list map of Quiestion and Slected Answer
-            var selectedMeta = await _context.QuizAnswers
+            var answers = await _context.QuizAnswers
                 .AsNoTracking()
-                .Where(a => selectedAnswerIds.Contains(a.AnswerId))
-                .Select(a => new { a.AnswerId, a.QuestionId })
+                .Where(a => a.QuestionId.HasValue && a.Question != null && a.Question.Quizzes.Any(q => q.QuizId == quizId))
+                .Select(a => new { a.AnswerId, QuestionId = a.QuestionId!.Value, a.IsCorrect })
                 .ToListAsync(ct);
 
-            // create dictionary QuestionId -> list of AsnswerIds
-            var selectedByQuestion = selectedMeta
-                .GroupBy(x => x.QuestionId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(x => x.AnswerId).ToHashSet()
-                );
-            var questionIds = selectedByQuestion.Keys.ToList();
+            var answerToQuestion = answers
+                .GroupBy(a => a.AnswerId)
+                .ToDictionary(g => g.Key, g => g.First().QuestionId);
 
-            // get list correct answersid to list of object {questionId, answerId}
-            var correctPairs = await _context.QuizAnswers
-                .AsNoTracking()
-                .Where(a => questionIds.Contains(a.QuestionId) && a.IsCorrect)
-                .Select(a => new { a.QuestionId, a.AnswerId })
-                .ToListAsync();
+            var correctByQuestion = answers
+                .Where(a => a.IsCorrect)
+                .GroupBy(a => a.QuestionId)
+                .ToDictionary(g => g.Key, g => g.Select(a => a.AnswerId).ToHashSet());
 
-            // distionary key: questionId, value: list of correct answerIds
-            var correctByQuestion = correctPairs
-                .GroupBy(x => x.QuestionId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(x => x.AnswerId).ToHashSet()
-                );
+            var answerKey = new QuizAnswerKeyCache(answerToQuestion, correctByQuestion);
+            _cache.Set(cacheKey, answerKey, TimeSpan.FromHours(2));
+            return answerKey;
+        }
 
-            // way to calculate score
-            // + 1 for each question where that set answer (selectedByQuestion) is the same with set answer (correctByQuestion) 
+        public async Task<float> CalculateScoreAsync(TestResutlResponse result, CancellationToken ct)
+        {
+            var answerKey = await GetQuizAnswerKeyAsync(result.QuizId, ct);
+
+            // Group user selected answers by QuestionId in memory
+            var selectedByQuestion = new Dictionary<int, HashSet<int>>();
+            foreach (var answer in result.ListAnswers)
+            {
+                if (answerKey.AnswerToQuestionMap.TryGetValue(answer.AnswerId, out int qId))
+                {
+                    if (!selectedByQuestion.TryGetValue(qId, out var set))
+                    {
+                        set = new HashSet<int>();
+                        selectedByQuestion[qId] = set;
+                    }
+                    set.Add(answer.AnswerId);
+                }
+            }
+
             int score = 0;
             foreach (var (questionId, selectedSet) in selectedByQuestion)
             {
-                if (!correctByQuestion.TryGetValue(questionId, out var correctSet))
+                if (answerKey.CorrectAnswersByQuestion.TryGetValue(questionId, out var correctSet))
                 {
-                    continue; // skip if no questionId found in correctByQuestion set
-                }
-                if (selectedSet.SetEquals(correctSet))
-                                {
-                    score ++;
+                    if (selectedSet.SetEquals(correctSet))
+                    {
+                        score++;
+                    }
                 }
             }
+
             return score;
         }
 
         public async Task<Take> SaveResultAsync(float score, TestResutlResponse result, int userId, CancellationToken ct)
         {
-            // Map the user submitted AnswerIds to TakeAnswers
-            var answerIds = result.ListAnswers.Select(a => a.AnswerId).ToList();
+            var answerIds = result.ListAnswers.Select(a => a.AnswerId).Distinct().ToList();
 
-            var answers = await _context.QuizAnswers
-                .Where(a => answerIds.Contains(a.AnswerId))
-                .Select(a => new TakeAnswer { AnswerId = a.AnswerId })
-                .ToListAsync(ct);
+            var answers = answerIds
+                .Select(id => new TakeAnswer { AnswerId = id })
+                .ToList();
 
-            // Keep the StartTime sent by the client
             var take = new Take
             {
                 QuizId = result.QuizId,
@@ -134,6 +154,7 @@ namespace QuizCarLicense.Repositories.Implementations
         public async Task<List<QuestionDTO>> BuildGuestTestResultAsync(Quiz quiz, List<TestAnswerRequest> userAnswers, CancellationToken ct)
         {
             var questions = await _context.QuizQuestions
+                .AsNoTracking()
                 .Where(q => q.Quizzes.Any(qz => qz.QuizId == quiz.QuizId))
                 .Include(q => q.QuizAnswers)
                 .ToListAsync(ct);
