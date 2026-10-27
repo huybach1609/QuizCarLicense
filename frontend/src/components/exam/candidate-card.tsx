@@ -2,81 +2,77 @@
 
 import React, { useMemo } from "react";
 import type { QuizExamDetail } from "@/lib/api-client";
-import { Users, QrCode } from "lucide-react";
+import { BarcodeStrip } from "@/components/telemetry/telemetry-primitives";
 
 interface CandidateCardProps {
-  quiz: QuizExamDetail;
+  quiz?: Partial<QuizExamDetail>;
   userName?: string;
+  licenseClassCode?: string | null;
+  passScore?: number;
+  totalQuestions?: number;
+  dateStr?: string;
 }
 
-export function CandidateCard({ quiz, userName }: CandidateCardProps) {
+export function CandidateCard({
+  quiz = {},
+  userName,
+  licenseClassCode,
+  passScore: customPassScore,
+  totalQuestions: customTotalQuestions,
+  dateStr,
+}: CandidateCardProps) {
   const currentDate = useMemo(() => {
+    if (dateStr) return dateStr;
     const now = new Date();
     const day = String(now.getDate()).padStart(2, "0");
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const year = now.getFullYear();
     return `${day}/${month}/${year}`;
-  }, []);
+  }, [dateStr]);
 
-  const displayName = userName || "Học viên (Khách thi thử)";
-  const licenseClass = quiz.licenseClassCode || "B2";
-  const passScore = quiz.passScore ?? (quiz.totalQuestions === 35 ? 32 : Math.round(quiz.totalQuestions * 0.9));
+  const displayName = userName || "HỌC VIÊN (KHÁCH THI THỬ)";
+  const licenseClass =
+    licenseClassCode ||
+    (quiz && "licenseClassCode" in quiz ? quiz.licenseClassCode : null) ||
+    "B";
+  const total =
+    customTotalQuestions ??
+    (quiz && "totalQuestions" in quiz ? quiz.totalQuestions : null) ??
+    30;
+  const passScore =
+    customPassScore ??
+    (quiz && "passScore" in quiz ? quiz.passScore : null) ??
+    (total === 35 ? 32 : Math.round(total * 0.9));
 
   return (
-    <div className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 text-xs">
-      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-center">
-        {/* Left: Avatar Silhouette */}
-        <div className="sm:col-span-3 flex items-center justify-center">
-          <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-md border border-border bg-muted/30 flex flex-col items-center justify-end overflow-hidden p-1 shadow-2xs">
-            <svg
-              viewBox="0 0 80 90"
-              className="w-full h-full text-muted-foreground/45"
-              fill="currentColor"
-            >
-              {/* Head */}
-              <circle cx="40" cy="28" r="16" />
-              {/* Shoulders */}
-              <path d="M12 84 C12 58, 22 50, 40 50 C58 50, 68 58, 68 84 Z" />
-            </svg>
+    <div className="border border-border bg-card p-2.5 font-mono text-xs select-none">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 text-center sm:text-left divide-y sm:divide-y-0 sm:divide-x divide-border/60">
+        {/* Cell 1: Candidate Identity */}
+        <div className="flex flex-col gap-0.5 justify-center sm:pr-2">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase">
+            <BarcodeStrip height={8} bars={[1, 2, 1, 2]} className="opacity-60" />
+            <span>THÍ SINH</span>
           </div>
+          <span className="font-bold text-foreground truncate text-xs sm:text-[13px]">
+            {displayName}
+          </span>
         </div>
 
-        {/* Middle: Candidate Information */}
-        <div className="sm:col-span-6 flex flex-col gap-1.5 justify-center leading-relaxed">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground w-28 shrink-0">Họ và tên:</span>
-            <span className="font-bold text-foreground truncate">{displayName}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground w-28 shrink-0">Hạng xe:</span>
-            <span className="font-bold text-foreground">
-              {licenseClass} - {quiz.title}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground w-28 shrink-0">Ngày thi:</span>
-            <span className="font-mono text-foreground tabular-nums">{currentDate}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground w-28 shrink-0">Trạng thái:</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Đang thi
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 pt-0.5">
-            <span className="text-muted-foreground w-28 shrink-0">Bạn cần làm đúng:</span>
-            <span className="font-mono font-bold text-foreground tabular-nums">
-              {passScore}/{quiz.totalQuestions} câu
-            </span>
-          </div>
+        {/* Cell 2: License Class */}
+        <div className="flex flex-col gap-0.5 justify-center pt-2 sm:pt-0 sm:px-3">
+          <span className="text-[10px] text-muted-foreground uppercase">HẠNG SÁT HẠCH</span>
+          <span className="font-bold text-foreground truncate text-xs sm:text-[13px]">
+            HẠNG {licenseClass} • {currentDate}
+          </span>
         </div>
 
-
+        {/* Cell 3: Passing Threshold */}
+        <div className="flex flex-col gap-0.5 justify-center pt-2 sm:pt-0 sm:px-3">
+          <span className="text-[10px] text-primary uppercase font-bold">CHUẨN ĐẠT TỐI THIỂU</span>
+          <span className="font-bold text-primary tabular-nums text-xs sm:text-[13px]">
+            {passScore}/{total} CÂU (≥ 90%)
+          </span>
+        </div>
       </div>
     </div>
   );

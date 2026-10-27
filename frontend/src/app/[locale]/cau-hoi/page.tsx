@@ -18,7 +18,7 @@ export async function generateMetadata({
     locale,
   });
 }
-
+// view list off question
 export default async function QuestionsCatalogPage({
   params,
   searchParams,

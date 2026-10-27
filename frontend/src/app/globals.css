@@ -1,6 +1,15 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-@theme {
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -20,66 +29,153 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+:root {
+  /* Official Assessment - Light Mode (High Contrast & Paper White) */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.14 0.005 250);
+  --card: oklch(0.98 0.002 250);
+  --card-foreground: oklch(0.14 0.005 250);
+  --popover: oklch(0.99 0 0);
+  --popover-foreground: oklch(0.14 0.005 250);
+
+  /* Brand Accent: Traffic Signal Emerald (#048848) */
+  --primary: oklch(0.52 0.15 155);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.95 0.004 250);
+  --secondary-foreground: oklch(0.20 0.01 250);
+  --muted: oklch(0.95 0.004 250);
+  --muted-foreground: oklch(0.45 0.01 250);
+  --accent: oklch(0.94 0.008 250);
+  --accent-foreground: oklch(0.14 0.005 250);
+
+  /* Danger / Câu điểm liệt / Trượt (#dc2626) */
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.89 0.005 250);
+  --input: oklch(0.89 0.005 250);
+  --ring: oklch(0.52 0.15 155);
+  --radius: 0.125rem;
+
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.98 0.002 250);
+  --sidebar-foreground: oklch(0.14 0.005 250);
+  --sidebar-primary: oklch(0.52 0.15 155);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.008 250);
+  --sidebar-accent-foreground: oklch(0.14 0.005 250);
+  --sidebar-border: oklch(0.89 0.005 250);
+  --sidebar-ring: oklch(0.52 0.15 155);
+
+  /* Chart Tokens */
+  --chart-1: oklch(0.52 0.15 155);
+  --chart-2: oklch(0.55 0.22 27);
+  --chart-3: oklch(0.60 0.14 220);
+  --chart-4: oklch(0.70 0.15 70);
+  --chart-5: oklch(0.45 0.01 250);
+
+  /* Font Stacks */
+  --font-sans: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: "Be Vietnam Pro", Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: "Roboto Slab", Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.dark {
+  /* Digital Cockpit HUD - Dark Mode (Pitch Black Obsidian & High-Contrast Phosphor) */
+  --background: oklch(0.08 0.005 240);
+  --foreground: oklch(0.96 0.003 240);
+  --card: oklch(0.11 0.006 240);
+  --card-foreground: oklch(0.96 0.003 240);
+  --popover: oklch(0.12 0.006 240);
+  --popover-foreground: oklch(0.96 0.003 240);
+
+  /* Brand Accent: Radar Signal Emerald (#10b981) */
+  --primary: oklch(0.72 0.18 155);
+  --primary-foreground: oklch(0.08 0.005 240);
+
+  --secondary: oklch(0.18 0.008 240);
+  --secondary-foreground: oklch(0.95 0.003 240);
+  --muted: oklch(0.15 0.008 240);
+  --muted-foreground: oklch(0.65 0.01 240);
+  --accent: oklch(0.18 0.008 240);
+  --accent-foreground: oklch(0.96 0.003 240);
+
+  /* Hazard / Câu điểm liệt / Trượt (#ef4444) */
+  --destructive: oklch(0.63 0.24 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.24 0.008 240);
+  --input: oklch(0.24 0.008 240);
+  --ring: oklch(0.72 0.18 155);
+
+  /* Sidebar Tokens Dark */
+  --sidebar: oklch(0.11 0.006 240);
+  --sidebar-foreground: oklch(0.96 0.003 240);
+  --sidebar-primary: oklch(0.72 0.18 155);
+  --sidebar-primary-foreground: oklch(0.08 0.005 240);
+  --sidebar-accent: oklch(0.18 0.008 240);
+  --sidebar-accent-foreground: oklch(0.96 0.003 240);
+  --sidebar-border: oklch(0.24 0.008 240);
+  --sidebar-ring: oklch(0.72 0.18 155);
+
+  /* Chart Tokens Dark */
+  --chart-1: oklch(0.72 0.18 155);
+  --chart-2: oklch(0.63 0.24 25);
+  --chart-3: oklch(0.70 0.14 220);
+  --chart-4: oklch(0.78 0.16 75);
+  --chart-5: oklch(0.65 0.008 240);
 }
 
 @layer base {
-  :root {
-    --background: oklch(0.99 0 0);
-    --foreground: oklch(0.14 0.005 250);
-    --card: oklch(0.98 0.002 250);
-    --card-foreground: oklch(0.14 0.005 250);
-    --popover: oklch(0.99 0 0);
-    --popover-foreground: oklch(0.14 0.005 250);
-    --primary: oklch(0.52 0.15 155);
-    --primary-foreground: oklch(0.99 0 0);
-    --secondary: oklch(0.95 0.004 250);
-    --secondary-foreground: oklch(0.20 0.01 250);
-    --muted: oklch(0.95 0.004 250);
-    --muted-foreground: oklch(0.45 0.01 250);
-    --accent: oklch(0.94 0.008 250);
-    --accent-foreground: oklch(0.14 0.005 250);
-    --destructive: oklch(0.55 0.22 27);
-    --destructive-foreground: oklch(0.99 0 0);
-    --border: oklch(0.89 0.005 250);
-    --input: oklch(0.89 0.005 250);
-    --ring: oklch(0.52 0.15 155);
-    --radius: 0.5rem;
+  * {
+    @apply border-border outline-ring/50;
   }
-
-  .dark {
-    --background: oklch(0.13 0.005 250);
-    --foreground: oklch(0.96 0.002 250);
-    --card: oklch(0.16 0.006 250);
-    --card-foreground: oklch(0.96 0.002 250);
-    --popover: oklch(0.14 0.005 250);
-    --popover-foreground: oklch(0.96 0.002 250);
-    --primary: oklch(0.65 0.16 155);
-    --primary-foreground: oklch(0.12 0.005 250);
-    --secondary: oklch(0.22 0.008 250);
-    --secondary-foreground: oklch(0.95 0.002 250);
-    --muted: oklch(0.20 0.006 250);
-    --muted-foreground: oklch(0.65 0.008 250);
-    --accent: oklch(0.22 0.008 250);
-    --accent-foreground: oklch(0.96 0.002 250);
-    --destructive: oklch(0.60 0.22 27);
-    --destructive-foreground: oklch(0.99 0 0);
-    --border: oklch(0.25 0.006 250);
-    --input: oklch(0.25 0.006 250);
-    --ring: oklch(0.65 0.16 155);
+  html {
+    @apply font-sans;
   }
-}
-
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  -webkit-font-smoothing: antialiased;
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Telemetry & Cockpit HUD Utilities */
+.scanline-overlay {
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.25) 51%
+  );
+  background-size: 100% 4px;
+}
+

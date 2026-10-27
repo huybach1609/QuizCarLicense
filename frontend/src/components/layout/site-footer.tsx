@@ -1,20 +1,24 @@
 import { Link } from "@/i18n/routing";
+import { BarcodeStrip } from "@/components/telemetry/telemetry-primitives";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 py-8 bg-card/40 mt-auto">
-      <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-        <div>
-          <span className="font-medium text-foreground">QuizCarLicense</span> — Hệ thống ôn luyện lý thuyết sát hạch lái xe
+    <footer className="border-t border-border bg-card/60 py-6 mt-auto font-mono text-xs select-none">
+      <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-muted-foreground">
+        <div className="flex items-center gap-3">
+          <BarcodeStrip height={10} bars={[1, 2, 1, 3, 2, 1, 2]} className="opacity-50" />
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/cau-hoi" className="hover:text-foreground transition-colors">
-            600 Câu hỏi
+
+        <div className="flex items-center gap-4 text-[11px]">
+          <Link href="/cau-hoi" className="hover:text-foreground hover:underline transition-colors">
+            NGÂN HÀNG 600 CÂU
           </Link>
-          <span className="text-border">•</span>
-          <Link href="/" className="hover:text-foreground transition-colors">
-            Bộ đề thi
+          <span className="opacity-30">/</span>
+          <Link href="/" className="hover:text-foreground hover:underline transition-colors">
+            BỘ ĐỀ SÁT HẠCH
           </Link>
+          <span className="opacity-30">/</span>
+          <span className="text-primary font-bold">Online: xx</span>
         </div>
       </div>
     </footer>

@@ -422,3 +422,10 @@ openspec
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+
+.claude
+.codex
+CLAUDE.md
+AGENTS.md
+DESIGN.md
+PRODUCT.md

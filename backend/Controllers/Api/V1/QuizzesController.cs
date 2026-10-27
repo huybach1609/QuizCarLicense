@@ -196,7 +196,7 @@ public sealed class QuizzesController : ControllerBase
 
     /// <summary>
     /// Nộp bài thi để chấm điểm trên RAM (kiểm tra đồng thời Điểm đạt và lỗi Câu hỏi điểm liệt).
-    /// Hỗ trợ cả học viên đã đăng nhập (lưu lượt thi) và khách vãng lai (Stateless JSON, không lưu Session).
+    /// Hỗ trợ cả học viên đã đăng nhập (lưu lượt thi) và khách  (Stateless JSON, không lưu Session).
     /// </summary>
     [HttpPost("{id:int}/submit")]
     [EnableRateLimiting("SubmitLimit")]

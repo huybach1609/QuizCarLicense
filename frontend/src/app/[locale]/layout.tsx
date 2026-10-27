@@ -6,6 +6,8 @@ import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { constructSeoMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 
@@ -53,9 +55,12 @@ export default async function LocaleLayout({
       <body className="min-h-screen flex flex-col font-sans bg-background text-foreground selection:bg-primary/20 selection:text-primary">
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
-            <SiteHeader />
-            <main className="flex-1 flex flex-col">{children}</main>
-            <SiteFooter />
+            <TooltipProvider>
+              <SiteHeader />
+              <main className="flex-1 flex flex-col">{children}</main>
+              <SiteFooter />
+              <Toaster />
+            </TooltipProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

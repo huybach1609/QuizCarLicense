@@ -1,106 +1,244 @@
 "use client";
 
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { ThemeToggle } from "./theme-toggle";
 import { LanguageToggle } from "./language-toggle";
-import { ShieldCheck, History, BookOpen, User, LogOut } from "lucide-react";
+import { ShieldCheck, History, BookOpen, User, LogOut, Menu } from "lucide-react";
+import { BarcodeStrip } from "@/components/telemetry/telemetry-primitives";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
-interface AuthUser {
-  userId: number;
-  username: string;
-  fullName: string;
-  role: string;
-}
+import { useAuthStore } from "@/stores/use-auth-store";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 
 export function SiteHeader() {
   const t = useTranslations("Common");
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const { user, isInitialized, fetchUser, logout } = useAuthStore();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.user) setUser(data.user);
-      })
-      .catch(() => {});
-  }, []);
+    if (!isInitialized) {
+      fetchUser();
+    }
+  }, [isInitialized, fetchUser]);
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setUser(null);
+    await logout();
+    setMobileOpen(false);
     router.refresh();
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-7 h-7 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs tracking-wider">
-            QCL
-          </div>
-          <span className="font-semibold text-sm tracking-tight text-foreground group-hover:text-primary transition-colors">
-            QuizCarLicense
-          </span>
-        </Link>
-
-        {/* Navigation Links */}
-        <nav className="hidden md:flex items-center gap-5 text-xs font-medium text-muted-foreground">
-          <Link href="/cau-hoi" className="hover:text-foreground transition-colors flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>{t("questions")}</span>
+        {/* Logo & Telemetry Tag */}
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2 group font-mono">
+            <div className="size-7 rounded-none border border-primary bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs tracking-wider">
+              QCL
+            </div>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-xs sm:text-sm tracking-tight text-foreground group-hover:text-primary transition-colors">
+                QUIZCARLICENSE
+              </span>
+              <span className="text-[9px] text-muted-foreground tracking-widest hidden sm:inline">
+                TELEMETRY OBSERVATORY
+              </span>
+            </div>
           </Link>
+          <BarcodeStrip height={12} bars={[1, 3, 1, 2, 1]} className="hidden md:block opacity-40 ml-1" />
+        </div>
+
+        {/* Live System Telemetry Metrics (Lattice Header Style) */}
+        <div className="hidden lg:flex items-center gap-4 text-[11px] font-mono text-muted-foreground select-none">
+          <div className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+            <span>FIELD: <strong className="text-foreground">ONLINE</strong></span>
+          </div>
+          <span className="opacity-30">/</span>
+          <span>SIGNAL: <strong className="text-foreground tabular-nums">600Q</strong></span>
+        </div>
+
+        {/* Desktop Navigation Links */}
+        <nav className="hidden md:flex items-center gap-1 text-xs font-medium">
+          <Button
+            variant="ghost"
+            size="sm"
+            render={<Link href="/cau-hoi" />}
+            nativeButton={false}
+            className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <BookOpen className="size-3.5" />
+            <span>{t("questions")}</span>
+          </Button>
 
           {user && (
-            <Link href="/lich-su" className="hover:text-foreground transition-colors flex items-center gap-1.5">
-              <History className="w-3.5 h-3.5" />
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/lich-su" />}
+              nativeButton={false}
+              className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <History className="size-3.5" />
               <span>{t("history")}</span>
-            </Link>
+            </Button>
           )}
 
           {user?.role === "Admin" && (
-            <Link
-              href="/admin/quizzes"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 font-semibold"
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/admin/quizzes" />}
+              nativeButton={false}
+              className="h-8 gap-1.5 text-xs text-primary hover:text-primary font-semibold"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <ShieldCheck className="size-3.5" />
               <span>{t("admin")}</span>
-            </Link>
+            </Button>
           )}
         </nav>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <LanguageToggle />
           <ThemeToggle />
 
-          {user ? (
-            <div className="flex items-center gap-2 ml-1">
-              <span className="text-xs font-medium text-foreground hidden sm:inline-block max-w-[120px] truncate">
-                {user.fullName || user.username}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="p-1.5 rounded-md border border-border/70 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
-                title={t("logout")}
-                aria-label={t("logout")}
+          {/* Desktop User Section */}
+          <div className="hidden sm:flex items-center gap-2">
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-foreground max-w-[120px] truncate">
+                  {user.fullName || user.username}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLogout}
+                  className="size-8 text-muted-foreground hover:text-destructive"
+                  title={t("logout")}
+                  aria-label={t("logout")}
+                >
+                  <LogOut className="size-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                render={<Link href="/dang-nhap" />}
+                nativeButton={false}
+                className="h-8 gap-1.5 px-3 text-xs font-medium"
               >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <Link
-              href="/dang-nhap"
-              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors ml-1"
+                <User className="size-3.5" />
+                <span>{t("login")}</span>
+              </Button>
+            )}
+          </div>
+
+          {/* Mobile Menu Sheet */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 md:hidden text-muted-foreground hover:text-foreground"
+                  aria-label="Open navigation menu"
+                />
+              }
             >
-              <User className="w-3 h-3" />
-              <span>{t("login")}</span>
-            </Link>
-          )}
+              <Menu className="size-4" />
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72 flex flex-col p-6">
+              <SheetHeader className="text-left">
+                <SheetTitle className="flex items-center gap-2 text-base font-bold">
+                  <span className="size-6 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                    QCL
+                  </span>
+                  QuizCarLicense
+                </SheetTitle>
+              </SheetHeader>
+
+              <Separator className="my-4" />
+
+              <nav className="flex flex-col gap-1.5 flex-1">
+                <Button
+                  variant="ghost"
+                  render={<Link href="/cau-hoi" />}
+                  nativeButton={false}
+                  className="justify-start gap-2.5 h-10 text-sm font-medium"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <BookOpen className="size-4" />
+                  <span>{t("questions")}</span>
+                </Button>
+
+                {user && (
+                  <Button
+                    variant="ghost"
+                    render={<Link href="/lich-su" />}
+                    nativeButton={false}
+                    className="justify-start gap-2.5 h-10 text-sm font-medium"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <History className="size-4" />
+                    <span>{t("history")}</span>
+                  </Button>
+                )}
+
+                {user?.role === "Admin" && (
+                  <Button
+                    variant="ghost"
+                    render={<Link href="/admin/quizzes" />}
+                    nativeButton={false}
+                    className="justify-start gap-2.5 h-10 text-sm font-semibold text-primary"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <ShieldCheck className="size-4" />
+                    <span>{t("admin")}</span>
+                  </Button>
+                )}
+              </nav>
+
+              <Separator className="my-4" />
+
+              <div className="pt-2">
+                {user ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="text-xs text-muted-foreground truncate">
+                      Đăng nhập: <strong className="text-foreground">{user.fullName || user.username}</strong>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleLogout}
+                      className="w-full justify-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <LogOut className="size-4" />
+                      <span>{t("logout")}</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    render={<Link href="/dang-nhap" />}
+                    nativeButton={false}
+                    className="w-full justify-center gap-2"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <User className="size-4" />
+                    <span>{t("login")}</span>
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
