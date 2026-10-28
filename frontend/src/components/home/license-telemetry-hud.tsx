@@ -1,7 +1,7 @@
 "use client";
 
 import type { LicenseClass } from "@/lib/api-client";
-import { BarcodeStrip } from "@/components/telemetry/telemetry-primitives";
+import { BarcodeStrip, AnimatedNumber } from "@/components/telemetry/telemetry-primitives";
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert, CheckCircle2, Clock, HelpCircle } from "lucide-react";
 
@@ -11,7 +11,10 @@ interface LicenseTelemetryHudProps {
 
 export function LicenseTelemetryHud({ activeLicense }: LicenseTelemetryHudProps) {
   return (
-    <div className="border border-border bg-card p-4 sm:p-5 flex flex-col gap-4 select-none">
+    <div
+      key={activeLicense.code}
+      className="border border-border bg-card p-4 sm:p-5 flex flex-col gap-4 select-none animate-calibrate"
+    >
       {/* Header Info Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-border/70 text-xs">
         <div className="flex items-center gap-2.5 flex-wrap font-mono">
@@ -19,7 +22,7 @@ export function LicenseTelemetryHud({ activeLicense }: LicenseTelemetryHudProps)
             {activeLicense.name}
           </Badge>
           <span className="text-muted-foreground uppercase">
-            // {activeLicense.vehicleGroup === "Motorbike" ? "MÔ TÔ HAI BÁNH" : "Ô TÔ & XE CHUYÊN DÙNG"}
+            {"//"} {activeLicense.vehicleGroup === "Motorbike" ? "MÔ TÔ HAI BÁNH" : "Ô TÔ & XE CHUYÊN DÙNG"}
           </span>
           <span className="text-muted-foreground/30 hidden sm:inline">•</span>
           <span className="text-foreground/90 font-sans text-xs">
@@ -42,7 +45,8 @@ export function LicenseTelemetryHud({ activeLicense }: LicenseTelemetryHudProps)
             <HelpCircle className="size-3" />
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-foreground tabular-nums">
-            {activeLicense.totalQuestions} <span className="text-xs font-normal text-muted-foreground">câu</span>
+            <AnimatedNumber value={activeLicense.totalQuestions} />{" "}
+            <span className="text-xs font-normal text-muted-foreground">câu</span>
           </div>
           <span className="text-[10px] text-muted-foreground">Rút tự động từ 600 câu</span>
         </div>
@@ -54,8 +58,10 @@ export function LicenseTelemetryHud({ activeLicense }: LicenseTelemetryHudProps)
             <Clock className="size-3" />
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-foreground tabular-nums">
-            {activeLicense.durationMinutes} <span className="text-xs font-normal text-muted-foreground">phút</span>
+            <AnimatedNumber value={activeLicense.durationMinutes} />{" "}
+            <span className="text-xs font-normal text-muted-foreground">phút</span>
           </div>
+          <span className="text-[10px] text-muted-foreground">Đếm ngược tự động chuẩn CSGT</span>
         </div>
 
         {/* Cell 3: Pass Score */}
@@ -65,7 +71,9 @@ export function LicenseTelemetryHud({ activeLicense }: LicenseTelemetryHudProps)
             <CheckCircle2 className="size-3" />
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-primary tabular-nums">
-            {activeLicense.passScore}/{activeLicense.totalQuestions} <span className="text-xs font-normal opacity-80">điểm</span>
+            <AnimatedNumber value={activeLicense.passScore} />/
+            <AnimatedNumber value={activeLicense.totalQuestions} />{" "}
+            <span className="text-xs font-normal opacity-80">điểm</span>
           </div>
           <span className="text-[10px] text-primary/80">Tỷ lệ chính xác ≥ 90%</span>
         </div>

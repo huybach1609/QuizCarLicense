@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/routing";
 import type { LicenseClass, QuizSummary } from "@/lib/api-client";
-import { BarcodeStrip } from "@/components/telemetry/telemetry-primitives";
+import { BarcodeStrip, AnimatedNumber } from "@/components/telemetry/telemetry-primitives";
 import { Badge } from "@/components/ui/badge";
 import { Clock, ArrowRight } from "lucide-react";
 
@@ -13,13 +13,21 @@ interface ExamMatrixGridProps {
 
 export function ExamMatrixGrid({ officialExams, activeLicense }: ExamMatrixGridProps) {
   return (
-    <div className="flex flex-col gap-4 select-none">
+    <div key={activeLicense.code} className="flex flex-col gap-4 select-none animate-calibrate">
       <div className="flex items-center justify-between text-xs font-mono text-muted-foreground px-0.5">
         <span className="font-bold uppercase tracking-wider text-foreground">
-          // LIVE STREAMS: {officialExams.length} BỘ ĐỀ SÁT HẠCH TIÊU CHUẨN
+          {"//"} LIVE STREAMS: {officialExams.length} BỘ ĐỀ SÁT HẠCH TIÊU CHUẨN
         </span>
         <span className="hidden sm:inline">
-          THỜI GIAN: <strong className="text-foreground">{activeLicense.durationMinutes} PHÚT</strong> • ĐIỂM ĐẠT: <strong className="text-primary">{activeLicense.passScore}/{activeLicense.totalQuestions}</strong>
+          THỜI GIAN:{" "}
+          <strong className="text-foreground">
+            <AnimatedNumber value={activeLicense.durationMinutes} /> PHÚT
+          </strong>{" "}
+          • ĐIỂM ĐẠT:{" "}
+          <strong className="text-primary">
+            <AnimatedNumber value={activeLicense.passScore} />/
+            <AnimatedNumber value={activeLicense.totalQuestions} />
+          </strong>
         </span>
       </div>
 
@@ -34,7 +42,7 @@ export function ExamMatrixGrid({ officialExams, activeLicense }: ExamMatrixGridP
               <Link
                 key={quiz.quizId}
                 href={`/thi-sat-hach/${quiz.quizId}`}
-                className="group relative p-3 border border-border bg-card hover:border-primary hover:bg-muted/30 transition-all flex flex-col justify-between gap-3 font-mono"
+                className="group relative p-3 border border-border bg-card hover:border-primary hover:bg-muted/30 transition-all duration-200 flex flex-col justify-between gap-3 font-mono active:scale-[0.98]"
               >
                 {/* Top: Bay Name & Pass Score */}
                 <div className="flex items-center justify-between">
@@ -72,7 +80,7 @@ export function ExamMatrixGrid({ officialExams, activeLicense }: ExamMatrixGridP
         </div>
       ) : (
         <div className="p-8 border border-dashed border-border bg-card/40 text-center font-mono text-xs text-muted-foreground">
-          // CHƯA CÓ DỮ LIỆU BỘ ĐỀ SÁT HẠCH CHO HẠNG NÀY.
+          {"// CHƯA CÓ DỮ LIỆU BỘ ĐỀ SÁT HẠCH CHO HẠNG NÀY."}
         </div>
       )}
     </div>

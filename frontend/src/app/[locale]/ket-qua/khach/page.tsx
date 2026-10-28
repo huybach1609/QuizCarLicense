@@ -1,33 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Link } from "@/i18n/routing";
 import type { TestSubmitResult } from "@/lib/api-client";
 import { ExamResultStation, type ExamResultData } from "@/components/exam/exam-result-station";
 import { ArrowLeft, BookOpen } from "lucide-react";
 
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+function getSnapshot(): string | null {
+  return sessionStorage.getItem("qcl_guest_result");
+}
+
+function getServerSnapshot(): string | null {
+  return null;
+}
+
+const noopSubscribe = () => () => {};
+
 export default function GuestResultPage() {
-  const [result, setResult] = useState<TestSubmitResult | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isMounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  useEffect(() => {
-    const raw = sessionStorage.getItem("qcl_guest_result");
-    if (raw) {
-      try {
-        setResult(JSON.parse(raw));
-      } catch {
-        // Parse error
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  if (loading) {
+  if (!isMounted) {
     return (
       <div className="flex-1 flex items-center justify-center p-12 text-xs font-mono text-muted-foreground">
-        // ĐANG TẢI KẾT QUẢ THI THỬ...
+        {"//"} ĐANG TẢI KẾT QUẢ THI THỬ...
       </div>
     );
+  }
+
+  let result: TestSubmitResult | null = null;
+  if (raw) {
+    try {
+      result = JSON.parse(raw);
+    } catch {
+      result = null;
+    }
   }
 
   if (!result) {
@@ -37,7 +49,7 @@ export default function GuestResultPage() {
           <BookOpen className="size-6" />
         </div>
         <h2 className="text-base font-bold text-foreground uppercase">
-          // KHÔNG TÌM THẤY KẾT QUẢ
+          {"//"} KHÔNG TÌM THẤY KẾT QUẢ
         </h2>
         <p className="text-xs text-muted-foreground font-sans">
           Không tìm thấy dữ liệu bài thi thử vừa làm trong phiên làm việc này. Bạn có thể chọn đề thi khác để bắt đầu.

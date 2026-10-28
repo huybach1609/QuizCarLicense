@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
+import { useEffect, useState, useCallback } from "react";
 import { Plus, Trash2, Upload, AlertCircle, Image as ImageIcon } from "lucide-react";
 
 interface AnswerItem {
@@ -35,7 +34,7 @@ export default function AdminQuestionsPage() {
   ]);
   const [error, setError] = useState<string | null>(null);
 
-  const loadQuestions = async (p = 1) => {
+  const loadQuestions = useCallback(async (p = 1) => {
     setLoading(true);
     try {
       const res = await fetch(`/api/v1/admin/questions?page=${p}&pageSize=15`);
@@ -48,10 +47,29 @@ export default function AdminQuestionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadQuestions(1);
+    let ignore = false;
+    async function init() {
+      try {
+        const res = await fetch(`/api/v1/admin/questions?page=1&pageSize=15`);
+        if (res.ok && !ignore) {
+          const data = await res.json();
+          setQuestions(data.items || []);
+          setPage(data.pageNumber || 1);
+          setTotalPages(data.totalPages || 1);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    init();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {

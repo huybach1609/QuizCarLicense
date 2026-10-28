@@ -18,7 +18,7 @@ export function LicenseClassStrip({
     <div className="flex flex-col gap-2 select-none">
       <div className="flex items-center justify-between flex-wrap gap-2 px-0.5 text-xs font-mono">
         <span className="font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
-          <span>// CHỌN HẠNG SÁT HẠCH</span>
+          <span>{"//"} CHỌN HẠNG SÁT HẠCH</span>
           <span className="text-[10px] text-muted-foreground font-normal">
             (THÔNG TƯ 108/2026/TT-BCA)
           </span>
@@ -40,13 +40,21 @@ export function LicenseClassStrip({
               key={lic.code}
               type="button"
               onClick={() => onSelect(lic.code)}
-              className={`relative flex flex-col items-center justify-between py-2 px-1 text-center transition-all cursor-pointer border ${
+              className={`relative flex flex-col items-center justify-between py-2 px-1 text-center transition-all duration-150 cursor-pointer border active:scale-[0.97] outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                 isSelected
                   ? "bg-primary text-primary-foreground border-primary font-bold shadow-xs"
                   : "bg-background/80 text-foreground border-border/60 hover:border-primary/50 hover:bg-muted/40"
               }`}
               aria-pressed={isSelected}
             >
+              {/* Corner Telemetry Reticle */}
+              {isSelected && (
+                <span
+                  className="absolute top-0 right-0 size-1.5 border-t-2 border-r-2 border-primary-foreground/60"
+                  aria-hidden="true"
+                />
+              )}
+
               {/* Bay Number & Vehicle Icon */}
               <div className="w-full flex items-center justify-between px-1 text-[9px] font-mono opacity-70">
                 <span>{bayIndex}</span>
@@ -69,7 +77,7 @@ export function LicenseClassStrip({
 
               {/* Active Indicator Strip */}
               {isSelected && (
-                <span className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-4 h-[2px] bg-foreground" />
+                <span className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-5 h-[2px] bg-foreground transition-all duration-200" />
               )}
             </button>
           );

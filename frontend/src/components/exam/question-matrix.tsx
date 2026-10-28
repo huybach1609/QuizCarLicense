@@ -45,7 +45,7 @@ export function QuestionMatrix({
       {/* Header tích hợp DensityBar đo tiến độ ma trận trực tiếp */}
       <div className="flex items-center justify-between px-1 pb-1.5 border-b border-border/70 text-[11px]">
         <span className="font-bold uppercase text-foreground">
-          // MA TRẬN ĐỀ THI
+          {"//"} MA TRẬN ĐỀ THI
         </span>
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-[10px]">TIẾN ĐỘ:</span>

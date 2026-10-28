@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/routing";
 import type { LicenseClass, QuizSummary, PracticeLicenseSummary } from "@/lib/api-client";
-import { DensityBar, BarcodeStrip } from "@/components/telemetry/telemetry-primitives";
+import { DensityBar, BarcodeStrip, AnimatedNumber } from "@/components/telemetry/telemetry-primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert, Flame, ArrowRight } from "lucide-react";
@@ -25,11 +25,11 @@ export function PracticeTelemetryPanel({
   chapterTitles,
 }: PracticeTelemetryPanelProps) {
   return (
-    <div className="flex flex-col gap-6 select-none">
+    <div key={activeLicense.code} className="flex flex-col gap-6 select-none animate-calibrate">
       {/* 2 Special Focus Hazard Modules */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Module 1: Critical Questions Hazard */}
-        <div className="border border-destructive/40 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 relative overflow-hidden">
+        <div className="border border-destructive/40 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 relative overflow-hidden transition-colors hover:border-destructive/60">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="size-10 border border-destructive/50 bg-destructive/10 flex items-center justify-center text-destructive shrink-0">
@@ -40,7 +40,8 @@ export function PracticeTelemetryPanel({
                   HAZARD MODULE // CRITICAL SAFETY
                 </span>
                 <h3 className="text-sm sm:text-base font-bold text-foreground font-mono">
-                  Bộ Câu Hỏi Điểm Liệt ({currentPractice.criticalCount} câu)
+                  Bộ Câu Hỏi Điểm Liệt (
+                  <AnimatedNumber value={currentPractice.criticalCount} /> câu)
                 </h3>
                 <span className="text-xs text-muted-foreground font-sans">
                   Tình huống mất an toàn giao thông nghiêm trọng. Trả lời sai 1 câu bị đánh trượt trực tiếp.
@@ -49,7 +50,7 @@ export function PracticeTelemetryPanel({
             </div>
 
             <Badge variant="destructive" className="font-mono text-xs shrink-0 rounded-none px-2 py-0.5">
-              {currentPractice.criticalCount} CÂU
+              <AnimatedNumber value={currentPractice.criticalCount} /> CÂU
             </Badge>
           </div>
 
@@ -76,18 +77,19 @@ export function PracticeTelemetryPanel({
         </div>
 
         {/* Module 2: Frequent Mistakes Anomaly */}
-        <div className="border border-amber-500/40 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 relative overflow-hidden">
+        <div className="border border-warning/40 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 relative overflow-hidden transition-colors hover:border-warning/60">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="size-10 border border-amber-500/50 bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+              <div className="size-10 border border-warning/50 bg-warning/10 flex items-center justify-center text-warning shrink-0">
                 <Flame className="size-5" />
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[10px] font-mono text-amber-500 uppercase tracking-wider font-bold">
+                <span className="text-[10px] font-mono text-warning uppercase tracking-wider font-bold">
                   ANOMALY FILTER // HIGH ERROR RATE
                 </span>
                 <h3 className="text-sm sm:text-base font-bold text-foreground font-mono">
-                  Câu Hỏi Hay Nhầm Lẫn ({currentPractice.frequentMistakesCount} câu)
+                  Câu Hỏi Hay Nhầm Lẫn (
+                  <AnimatedNumber value={currentPractice.frequentMistakesCount} /> câu)
                 </h3>
                 <span className="text-xs text-muted-foreground font-sans">
                   Tổng hợp các câu lý thuyết, biển báo và sa hình thí sinh trả lời sai nhiều nhất qua các kỳ thi.
@@ -97,15 +99,15 @@ export function PracticeTelemetryPanel({
 
             <Badge
               variant="outline"
-              className="font-mono text-xs border-amber-500/50 text-amber-500 bg-amber-500/10 shrink-0 rounded-none px-2 py-0.5"
+              className="font-mono text-xs border-warning/50 text-warning bg-warning/10 shrink-0 rounded-none px-2 py-0.5"
             >
-              {currentPractice.frequentMistakesCount} CÂU
+              <AnimatedNumber value={currentPractice.frequentMistakesCount} /> CÂU
             </Badge>
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-amber-500/20 text-xs font-mono">
+          <div className="flex items-center justify-between pt-3 border-t border-warning/20 text-xs font-mono">
             <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
-              <BarcodeStrip height={10} bars={[2, 1, 2, 1, 3]} className="text-amber-500" />
+              <BarcodeStrip height={10} bars={[2, 1, 2, 1, 3]} className="text-warning" />
               TỰ ĐỘNG CHẤM ĐIỂM
             </span>
             <Button
@@ -117,7 +119,7 @@ export function PracticeTelemetryPanel({
                 />
               }
               nativeButton={false}
-              className="h-8 gap-2 px-3 text-xs font-bold uppercase rounded-none border border-border hover:border-amber-500/50 cursor-pointer"
+              className="h-8 gap-2 px-3 text-xs font-bold uppercase rounded-none border border-border hover:border-warning/50 cursor-pointer"
             >
               <span>Ôn tập ngay</span>
               <ArrowRight className="size-3.5" />
@@ -130,7 +132,7 @@ export function PracticeTelemetryPanel({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between text-xs font-mono text-muted-foreground px-0.5">
           <span className="font-bold text-foreground uppercase tracking-wider">
-            // 6 CHƯƠNG LÝ THUYẾT ({currentPractice.totalQuestions} CÂU HỎI)
+            {"//"} 6 CHƯƠNG LÝ THUYẾT (<AnimatedNumber value={currentPractice.totalQuestions} /> CÂU HỎI)
           </span>
           <span className="text-primary hidden sm:inline">
             CHẾ ĐỘ ÔN LUYỆN
@@ -152,10 +154,10 @@ export function PracticeTelemetryPanel({
             return (
               <div
                 key={quiz.quizId || quiz.examNumber}
-                className={`p-3.5 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
+                className={`p-3.5 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all duration-200 border-l-2 ${
                   !isApplicable
-                    ? "bg-muted/20 opacity-50"
-                    : "hover:bg-muted/40"
+                    ? "bg-muted/20 opacity-40 border-l-transparent"
+                    : "border-l-transparent hover:border-l-primary hover:bg-muted/40"
                 }`}
               >
                 {/* Index & Title */}
@@ -186,7 +188,7 @@ export function PracticeTelemetryPanel({
                   ) : null}
 
                   <Badge variant="outline" className="tabular-nums font-mono text-xs rounded-none px-2 py-0.5 border-border">
-                    {chapterQuestionCount} câu
+                    <AnimatedNumber value={chapterQuestionCount} /> câu
                   </Badge>
 
                   {!isApplicable ? (

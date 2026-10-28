@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import type { GradedQuestion } from "@/lib/api-client";
@@ -16,7 +15,6 @@ import {
   History,
   FolderSync,
   LogIn,
-  AlertTriangle,
   ChevronRight,
   Check,
   X,
@@ -48,7 +46,6 @@ interface ExamResultStationProps {
 
 export function ExamResultStation({ data }: ExamResultStationProps) {
   const t = useTranslations("Result");
-  const router = useRouter();
 
   // Tìm câu sai đầu tiên để ưu tiên hiển thị cho thí sinh xem lại ngay
   const firstWrongIndex = useMemo(() => {
@@ -343,7 +340,7 @@ export function ExamResultStation({ data }: ExamResultStationProps) {
                 <div className="p-3 border border-border bg-background/60 flex flex-col gap-1 text-xs font-mono mt-1">
                   <div className="flex items-center gap-1.5 font-bold text-primary text-[11px] uppercase">
                     <Lightbulb className="size-3.5 text-primary" />
-                    <span>// GIẢI THÍCH CHI TIẾT & CĂN CỨ LUẬT GTĐB</span>
+                    <span>{"//"} GIẢI THÍCH CHI TIẾT & CĂN CỨ LUẬT GTĐB</span>
                   </div>
                   <p className="text-foreground/90 font-sans text-xs leading-relaxed pt-0.5 whitespace-pre-line">
                     {currentQuestion.explanation}
@@ -483,7 +480,7 @@ export function ExamResultStation({ data }: ExamResultStationProps) {
             <div className="flex items-center justify-between px-1 pb-1.5 border-b border-border/70 text-[11px] flex-wrap gap-1">
               <div className="flex items-center gap-1.5">
                 <span className="font-bold uppercase text-foreground">
-                  // MA TRẬN KẾT QUẢ
+                  {"//"} MA TRẬN KẾT QUẢ
                 </span>
               </div>
 

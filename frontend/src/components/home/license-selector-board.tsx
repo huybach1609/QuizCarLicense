@@ -214,12 +214,12 @@ export function LicenseSelectorBoard({
           </TabsList>
 
           <span className="text-xs font-mono text-muted-foreground hidden md:inline">
-            // TELEMETRY VIEW: <strong className="text-foreground">{activeLicense.name}</strong>
+            {"//"} TELEMETRY VIEW: <strong className="text-foreground">{activeLicense.name}</strong>
           </span>
         </div>
 
         {/* Tab 1: Ôn Tập Theo Chương & Điểm Liệt */}
-        <TabsContent value="practice" className="outline-none">
+        <TabsContent value="practice" className="outline-none data-[state=active]:animate-calibrate">
           <PracticeTelemetryPanel
             activeLicense={activeLicense}
             currentPractice={currentPractice}
@@ -231,7 +231,7 @@ export function LicenseSelectorBoard({
         </TabsContent>
 
         {/* Tab 2: Lưới Ma Trận 20 Đề Thi Sát Hạch Cố Định */}
-        <TabsContent value="exams" className="outline-none">
+        <TabsContent value="exams" className="outline-none data-[state=active]:animate-calibrate">
           <ExamMatrixGrid
             officialExams={officialExams}
             activeLicense={activeLicense}

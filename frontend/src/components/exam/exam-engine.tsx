@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useExamStore } from "@/stores/use-exam-store";
@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   BookOpen,
   ShieldAlert,
-  Lightbulb,
   Maximize2,
   Minimize2,
   RefreshCw,
@@ -46,7 +45,11 @@ export function ExamEngine({ quiz }: ExamEngineProps) {
     clearSession,
   } = useExamStore();
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -58,7 +61,6 @@ export function ExamEngine({ quiz }: ExamEngineProps) {
 
   // Khởi tạo hoặc khôi phục session
   useEffect(() => {
-    setMounted(true);
     startSession(
       quiz.quizId,
       quiz.title,
@@ -189,7 +191,7 @@ export function ExamEngine({ quiz }: ExamEngineProps) {
             <BookOpen className="size-6" />
           </div>
           <h2 className="text-base font-bold text-foreground uppercase">
-            // KHÔNG CÓ CÂU HỎI CHO HẠNG NÀY
+            {"//"} KHÔNG CÓ CÂU HỎI CHO HẠNG NÀY
           </h2>
           <p className="text-xs text-muted-foreground font-sans">
             {quiz.detail || "Chương kiến thức này không áp dụng trong chương trình đào tạo của hạng GPLX đã chọn."}
@@ -207,7 +209,7 @@ export function ExamEngine({ quiz }: ExamEngineProps) {
     }
     return (
       <div className="flex-1 flex items-center justify-center p-12 text-xs font-mono text-muted-foreground">
-        // KHỞI TẠO BUỒNG THI SÁT HẠCH...
+        {"//"} KHỞI TẠO BUỒNG THI SÁT HẠCH...
       </div>
     );
   }
@@ -494,7 +496,7 @@ export function ExamEngine({ quiz }: ExamEngineProps) {
           <div className="bg-card border border-border max-w-sm w-full p-5 shadow-2xl flex flex-col gap-4 font-mono select-none">
             <div className="flex items-center gap-2 text-foreground font-bold text-sm uppercase">
               <CheckCircle2 className="size-4 text-primary" />
-              <span>// XÁC NHẬN NỘP BÀI THI</span>
+              <span>{"//"} XÁC NHẬN NỘP BÀI THI</span>
             </div>
 
             <p className="text-xs text-muted-foreground font-sans leading-relaxed">

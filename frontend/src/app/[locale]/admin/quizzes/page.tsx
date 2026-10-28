@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Trash2, Edit2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Plus, Trash2, AlertCircle } from "lucide-react";
 import type { QuizSummary } from "@/lib/api-client";
 
 export default function AdminQuizzesPage() {
@@ -13,7 +13,7 @@ export default function AdminQuizzesPage() {
   const [questionIdsInput, setQuestionIdsInput] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const loadQuizzes = async () => {
+  const loadQuizzes = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/v1/quizzes");
@@ -24,10 +24,27 @@ export default function AdminQuizzesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadQuizzes();
+    let ignore = false;
+    async function init() {
+      try {
+        const res = await fetch("/api/v1/quizzes");
+        if (res.ok && !ignore) {
+          const data = await res.json();
+          setQuizzes(data);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    init();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {

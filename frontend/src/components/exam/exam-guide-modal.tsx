@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, Keyboard, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
+import { X, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
 import { BarcodeStrip } from "@/components/telemetry/telemetry-primitives";
 
 interface ExamGuideModalProps {
@@ -29,7 +29,7 @@ export function ExamGuideModal({
           <div className="flex items-center gap-2">
             <BarcodeStrip height={12} bars={[1, 3, 1, 2, 1]} className="text-primary" />
             <h3 className="font-bold text-sm uppercase text-foreground">
-              // HƯỚNG DẪN THAO TÁC PHÒNG THI SÁT HẠCH
+              {"//"} HƯỚNG DẪN THAO TÁC PHÒNG THI SÁT HẠCH
             </h3>
           </div>
           <button

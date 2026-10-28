@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useId, useMemo } from "react";
+import React, { useId } from "react";
 
 /**
  * 1. BarcodeStrip: Renders a precise SVG barcode accent
@@ -92,28 +92,31 @@ export function ScoreDistributionWaveform({
   const passRatio = questionCount > 0 ? passScore / questionCount : 0.8;
   const passX = Math.round(passRatio * width);
 
-  // Peak X coordinate (typically around passScore)
-  const peakScore = Math.min(questionCount - 1, passScore + 1);
+  // Peak X coordinate (typically around passScore or slightly higher)
+  const peakScore = Math.min(questionCount - 0.5, passScore + 0.5);
   const peakX = Math.round((peakScore / questionCount) * width);
+  const passY = Math.round(peakY + (baseY - peakY) * 0.4);
 
-  // Smooth distribution curve
+  // Monotonically increasing Bezier control points (strictly avoids knotting / self-intersecting loops)
   const p0 = { x: 0, y: baseY };
-  const p1 = { x: Math.round(width * 0.35), y: baseY - 3 };
-  const p2 = { x: Math.round(width * 0.55), y: baseY - 14 };
-  const p3 = { x: Math.round(passX - 25), y: baseY - 32 };
+  const cp1 = { x: Math.round(width * 0.35), y: baseY };
+  const cp2 = { x: Math.max(Math.round(width * 0.45), passX - 32), y: baseY - 16 };
+  const pPass = { x: passX, y: passY };
   const pPeak = { x: peakX, y: peakY };
-  const pEnd = { x: width, y: baseY - 10 };
+  const pEnd = { x: width, y: baseY - 8 };
 
-  const curvePath = `M ${p0.x} ${p0.y} 
-    C ${p1.x} ${p1.y}, ${p2.x - 20} ${p2.y}, ${p3.x} ${p3.y} 
-    S ${pPeak.x - 20} ${pPeak.y}, ${pPeak.x} ${pPeak.y} 
-    S ${width - 25} ${pPeak.y + 10}, ${pEnd.x} ${pEnd.y}`;
+  // Smooth composite curve: (0, baseY) -> pPass -> pPeak -> pEnd
+  const curvePath = `M ${p0.x} ${p0.y} ` +
+    `C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${pPass.x} ${pPass.y} ` +
+    `C ${pPass.x + Math.round((pPeak.x - pPass.x) * 0.5)} ${pPeak.y + 6}, ${pPeak.x - Math.max(4, Math.round((pPeak.x - pPass.x) * 0.25))} ${pPeak.y}, ${pPeak.x} ${pPeak.y} ` +
+    `C ${pPeak.x + Math.round((width - pPeak.x) * 0.45)} ${pPeak.y}, ${width - Math.round((width - pPeak.x) * 0.25)} ${baseY - 14}, ${pEnd.x} ${pEnd.y}`;
 
   const areaPath = `${curvePath} L ${width} ${baseY} L 0 ${baseY} Z`;
 
   return (
     <div
-      className={`relative w-full h-[88px] border border-border bg-card/60 overflow-hidden flex flex-col justify-center p-2 font-mono select-none ${className}`}
+      key={licenseCode}
+      className={`relative w-full h-[88px] border border-border bg-card/60 overflow-hidden flex flex-col justify-center p-2 font-mono select-none animate-calibrate ${className}`}
     >
       {/* Background Vertical Scanlines / Barcode Raster */}
       <div
@@ -134,13 +137,17 @@ export function ScoreDistributionWaveform({
         >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.3" />
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.35" />
               <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
           {/* Area fill under curve */}
-          <path d={areaPath} fill={`url(#${gradientId})`} />
+          <path
+            d={areaPath}
+            fill={`url(#${gradientId})`}
+            className="transition-all duration-300 ease-out"
+          />
 
           {/* Main distribution stroke */}
           <path
@@ -149,6 +156,7 @@ export function ScoreDistributionWaveform({
             strokeWidth="1.75"
             fill="none"
             strokeLinecap="round"
+            className="transition-all duration-300 ease-out"
           />
 
           {/* Baseline */}
@@ -171,10 +179,29 @@ export function ScoreDistributionWaveform({
             stroke="var(--primary)"
             strokeWidth="1.25"
             strokeDasharray="3 3"
+            className="transition-all duration-300 ease-out"
+          />
+
+          {/* Radar ping ring at peak */}
+          <circle
+            cx={pPeak.x}
+            cy={pPeak.y}
+            r="4"
+            fill="none"
+            stroke="var(--primary)"
+            strokeWidth="1"
+            className="animate-radar-ping origin-center"
+            style={{ transformOrigin: `${pPeak.x}px ${pPeak.y}px` }}
           />
 
           {/* Peak Dot indicator */}
-          <circle cx={pPeak.x} cy={pPeak.y} r="2.5" fill="var(--primary)" />
+          <circle
+            cx={pPeak.x}
+            cy={pPeak.y}
+            r="2.5"
+            fill="var(--primary)"
+            className="transition-all duration-300 ease-out"
+          />
 
           {/* Minimalist Axis Scale Numbers */}
           <text
@@ -196,6 +223,7 @@ export function ScoreDistributionWaveform({
             fontSize="9"
             textAnchor="middle"
             fontFamily="monospace"
+            className="transition-all duration-300 ease-out"
           >
             {passScore}
           </text>
@@ -223,7 +251,68 @@ export function ScoreDistributionWaveform({
 export const SignalWaveform = ScoreDistributionWaveform;
 
 /**
- * 4. DensityBar: Segmented ASCII-like visual telemetry progress bar
+ * 4. AnimatedNumber: High-precision tabular numeral counter with smooth interpolation
+ */
+export function AnimatedNumber({
+  value,
+  duration = 240,
+  className = "",
+}: {
+  value: number;
+  duration?: number;
+  className?: string;
+}) {
+  const [displayValue, setDisplayValue] = React.useState(value);
+  const prevValueRef = React.useRef(value);
+
+  React.useEffect(() => {
+    const fromVal = prevValueRef.current;
+    prevValueRef.current = value;
+
+    if (fromVal === value) return;
+
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      const timer = setTimeout(() => {
+        setDisplayValue(value);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+
+    let frameId: number;
+    let startTime: number | null = null;
+
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      // Ease out cubic
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(fromVal + (value - fromVal) * easeProgress);
+
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(step);
+      } else {
+        setDisplayValue(value);
+      }
+    };
+
+    frameId = requestAnimationFrame(step);
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [value, duration]);
+
+  return <span className={`tabular-nums ${className}`}>{displayValue}</span>;
+}
+
+/**
+ * 5. DensityBar: Segmented ASCII-like visual telemetry progress bar with stagger cascade
  */
 export function DensityBar({
   value,
@@ -243,20 +332,24 @@ export function DensityBar({
   return (
     <div className={`flex items-center gap-2 font-mono text-[11px] ${className}`}>
       <span className="tabular-nums font-bold text-foreground min-w-[36px] text-right">
-        {percentage}%
+        <AnimatedNumber value={percentage} duration={200} />%
       </span>
       <div className="flex items-center gap-[2px]" aria-hidden="true">
         {Array.from({ length: segments }).map((_, idx) => (
           <span
             key={idx}
-            className={`w-[3px] h-3 rounded-[0.5px] transition-colors ${
+            className={`w-[3px] h-3 rounded-[0.5px] transition-all duration-200 ${
               idx < activeCount
-                ? "bg-primary"
-                : "bg-muted-foreground/20"
+                ? "bg-primary opacity-100"
+                : "bg-muted-foreground/20 opacity-40"
             }`}
+            style={{
+              transitionDelay: `${idx * 14}ms`,
+            }}
           />
         ))}
       </div>
     </div>
   );
 }
+
