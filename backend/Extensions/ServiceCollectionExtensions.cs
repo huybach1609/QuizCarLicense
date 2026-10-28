@@ -11,7 +11,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using QuizCarLicense.Constrains;
 using QuizCarLicense.DTOs.Auth;
-using QuizCarLicense.Filters;
 using QuizCarLicense.Middleware;
 using QuizCarLicense.Models;
 using QuizCarLicense.Repositories.Implementations;
@@ -57,7 +56,6 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddExternalServices(this IServiceCollection services)
     {
-        services.AddRazorPages();
         services.AddHttpContextAccessor();
         services.AddMemoryCache();
         services.AddDistributedMemoryCache();
@@ -67,7 +65,6 @@ public static class ServiceCollectionExtensions
             options.Cookie.HttpOnly = true;
             options.Cookie.IsEssential = true;
         });
-        services.AddScoped<RedirectIfAuthenticatedFilter>();
         return services;
     }
 
@@ -80,36 +77,23 @@ public static class ServiceCollectionExtensions
 
         services.AddAuthentication(options =>
         {
-            // Mặc định cho Razor Pages
-            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddCookie(options =>
         {
-            options.LoginPath = "/Auth/Login";
-            options.AccessDeniedPath = "/Auth/Denied";
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
             options.SlidingExpiration = true;
 
             // Đối với API request, không redirect 302 mà trả thẳng mã 401/403
             options.Events.OnRedirectToLogin = context =>
             {
-                if (context.Request.Path.StartsWithSegments("/api"))
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    return Task.CompletedTask;
-                }
-                context.Response.Redirect(context.RedirectUri);
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return Task.CompletedTask;
             };
             options.Events.OnRedirectToAccessDenied = context =>
             {
-                if (context.Request.Path.StartsWithSegments("/api"))
-                {
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    return Task.CompletedTask;
-                }
-                context.Response.Redirect(context.RedirectUri);
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return Task.CompletedTask;
             };
         })

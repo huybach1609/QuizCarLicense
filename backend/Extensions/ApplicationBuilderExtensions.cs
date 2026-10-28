@@ -7,7 +7,7 @@ public static class ApplicationBuilderExtensions
         // 1. Nén phản hồi
         app.UseResponseCompression();
 
-        // 2. Xử lý lỗi (ApiExceptionHandler sẽ tự bắt các lỗi /api, Razor Pages dùng UseGlobalExceptionHandling)
+        // 2. Xử lý lỗi tập trung RFC 7807 ProblemDetails qua ApiExceptionHandler
         app.UseExceptionHandler();
         app.UseGlobalExceptionHandling(env);
 
@@ -52,7 +52,6 @@ public static class ApplicationBuilderExtensions
         }
         else
         {
-            app.UseExceptionHandler("/Error");
             app.UseHsts();
         }
         return app;

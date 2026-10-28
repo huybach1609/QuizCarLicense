@@ -113,7 +113,7 @@ public static class DbInitializer
                     existing.DurationMinutes = sl.DurationMinutes;
                     existing.PassScore = sl.PassScore;
                     existing.DisplayOrder = sl.DisplayOrder;
-                    existing.Description = sl.Description;
+                    existing.Description = sl.Description ?? "";
                 }
                 else
                 {
@@ -126,7 +126,7 @@ public static class DbInitializer
                         DurationMinutes = sl.DurationMinutes,
                         PassScore = sl.PassScore,
                         DisplayOrder = sl.DisplayOrder,
-                        Description = sl.Description
+                        Description = sl.Description ?? ""
                     });
                 }
             }

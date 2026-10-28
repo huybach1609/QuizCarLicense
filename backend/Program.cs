@@ -29,8 +29,7 @@ using (var scope = app.Services.CreateScope())
 
 app.ConfigurePipeline(app.Environment);
 
-// Dual-Mode: Chạy song song Razor Pages và Web API Controllers
-app.MapRazorPages();
+// Map RESTful Web API Controllers
 app.MapControllers();
 
 app.Run();
