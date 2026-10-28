@@ -158,6 +158,10 @@ export interface PublicQuestionDetail {
   isCritical?: boolean;
   categoryTitle?: string | null;
   explanation?: string | null;
+  categoryCode?: string | null;
+  prevQuestionId?: number | null;
+  nextQuestionId?: number | null;
+  relatedQuestions?: PublicQuestionItem[] | null;
 }
 
 export interface PublicQuestionItem {
@@ -167,6 +171,7 @@ export interface PublicQuestionItem {
   hasImage: boolean;
   isCritical?: boolean;
   categoryCode?: string | null;
+  categoryTitle?: string | null;
 }
 
 export interface AuthUser {

@@ -15,9 +15,9 @@ export function ExamMatrixGrid({ officialExams, activeLicense }: ExamMatrixGridP
   return (
     <div key={activeLicense.code} className="flex flex-col gap-4 select-none animate-calibrate">
       <div className="flex items-center justify-between text-xs font-mono text-muted-foreground px-0.5">
-        <span className="font-bold uppercase tracking-wider text-foreground">
+        <h2 className="font-bold uppercase tracking-wider text-foreground text-xs font-mono m-0">
           {"//"} LIVE STREAMS: {officialExams.length} BỘ ĐỀ SÁT HẠCH TIÊU CHUẨN
-        </span>
+        </h2>
         <span className="hidden sm:inline">
           THỜI GIAN:{" "}
           <strong className="text-foreground">

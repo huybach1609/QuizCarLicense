@@ -22,12 +22,9 @@ export function LicenseClassStrip({
   return (
     <div className="flex flex-col gap-2 select-none">
       <div className="flex items-center justify-between flex-wrap gap-2 px-0.5 text-xs font-mono">
-        <span className="font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+        <h2 className="font-bold text-foreground uppercase tracking-wider flex items-center gap-2 text-xs font-mono m-0">
           <span>{"//"} CHỌN HẠNG SÁT HẠCH</span>
-          <span className="text-[10px] text-muted-foreground font-normal">
-            (THÔNG TƯ 108/2026/TT-BCA)
-          </span>
-        </span>
+        </h2>
         <span className="text-muted-foreground text-[11px]">
           11 HẠNG GPLX ĐỘC LẬP
         </span>

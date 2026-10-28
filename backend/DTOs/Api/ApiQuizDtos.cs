@@ -175,7 +175,11 @@ public sealed record PublicQuestionDetailResponse(
     IReadOnlyList<string> InQuizzes,
     bool IsCritical = false,
     string? CategoryTitle = null,
-    string? Explanation = null);
+    string? Explanation = null,
+    string? CategoryCode = null,
+    int? PrevQuestionId = null,
+    int? NextQuestionId = null,
+    IReadOnlyList<PublicQuestionItemResponse>? RelatedQuestions = null);
 
 /// <summary>
 /// Tóm tắt câu hỏi công khai phục vụ sitemap và danh mục câu hỏi.
@@ -186,4 +190,5 @@ public sealed record PublicQuestionItemResponse(
     int Score,
     bool HasImage,
     bool IsCritical = false,
-    string? CategoryCode = null);
+    string? CategoryCode = null,
+    string? CategoryTitle = null);

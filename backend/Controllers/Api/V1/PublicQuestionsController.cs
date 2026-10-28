@@ -22,7 +22,7 @@ public sealed class PublicQuestionsController : ControllerBase
     }
 
     /// <summary>
-    /// Lấy danh sách câu hỏi sát hạch công khai (Có phân trang, OutputCache 5 phút).
+    /// Lấy danh sách câu hỏi sát hạch công khai (Có phân trang, lọc theo chương, điểm liệt, tìm kiếm, OutputCache 5 phút).
     /// </summary>
     [HttpGet]
     [OutputCache(PolicyName = "QuizzesCache")]
@@ -30,6 +30,9 @@ public sealed class PublicQuestionsController : ControllerBase
     public async Task<ActionResult<PagedResponse<PublicQuestionItemResponse>>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
+        [FromQuery] string? category = null,
+        [FromQuery] bool? critical = null,
+        [FromQuery] string? q = null,
         CancellationToken ct = default)
     {
         if (page < 1) page = 1;
@@ -38,21 +41,46 @@ public sealed class PublicQuestionsController : ControllerBase
 
         var query = _context.QuizQuestions
             .AsNoTracking()
-            .Where(q => q.Active);
+            .Where(x => x.Active);
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            var catCode = category.Trim();
+            query = query.Where(x => x.Category != null && x.Category.Code == catCode);
+        }
+
+        if (critical.HasValue && critical.Value)
+        {
+            query = query.Where(x => x.IsCritical);
+        }
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var term = q.Trim();
+            if (int.TryParse(term, out var qId))
+            {
+                query = query.Where(x => x.QuestionId == qId || x.Content.Contains(term));
+            }
+            else
+            {
+                query = query.Where(x => x.Content.Contains(term));
+            }
+        }
 
         var totalCount = await query.CountAsync(ct);
 
         var items = await query
-            .OrderBy(q => q.QuestionId)
+            .OrderBy(x => x.QuestionId)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(q => new PublicQuestionItemResponse(
-                q.QuestionId,
-                q.Content,
-                q.Score,
-                !string.IsNullOrEmpty(q.Image) && q.Image != "none",
-                q.IsCritical,
-                q.Category != null ? q.Category.Code : null))
+            .Select(x => new PublicQuestionItemResponse(
+                x.QuestionId,
+                x.Content,
+                x.Score,
+                !string.IsNullOrEmpty(x.Image) && x.Image != "none",
+                x.IsCritical,
+                x.Category != null ? x.Category.Code : null,
+                x.Category != null ? x.Category.Title : null))
             .ToListAsync(ct);
 
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -60,7 +88,7 @@ public sealed class PublicQuestionsController : ControllerBase
     }
 
     /// <summary>
-    /// Lấy chi tiết câu hỏi kèm đáp án đúng và danh sách các đề thi chứa câu hỏi đó (OutputCache 5 phút).
+    /// Lấy chi tiết câu hỏi kèm đáp án đúng, điều hướng câu hỏi liền kề và câu hỏi liên quan (OutputCache 5 phút).
     /// </summary>
     [HttpGet("{id:int}")]
     [OutputCache(PolicyName = "QuizzesCache")]
@@ -72,10 +100,10 @@ public sealed class PublicQuestionsController : ControllerBase
     {
         var question = await _context.QuizQuestions
             .AsNoTracking()
-            .Include(q => q.Category)
-            .Include(q => q.QuizAnswers)
-            .Include(q => q.Quizzes)
-            .FirstOrDefaultAsync(q => q.QuestionId == id && q.Active, ct);
+            .Include(x => x.Category)
+            .Include(x => x.QuizAnswers)
+            .Include(x => x.Quizzes)
+            .FirstOrDefaultAsync(x => x.QuestionId == id && x.Active, ct);
 
         if (question is null)
         {
@@ -94,8 +122,48 @@ public sealed class PublicQuestionsController : ControllerBase
             .ToList();
 
         var inQuizzes = question.Quizzes
-            .Select(q => q.Title)
+            .Select(x => x.Title)
             .ToList();
+
+        var prevId = await _context.QuizQuestions
+            .AsNoTracking()
+            .Where(x => x.Active && x.QuestionId < id)
+            .OrderByDescending(x => x.QuestionId)
+            .Select(x => (int?)x.QuestionId)
+            .FirstOrDefaultAsync(ct);
+
+        var nextId = await _context.QuizQuestions
+            .AsNoTracking()
+            .Where(x => x.Active && x.QuestionId > id)
+            .OrderBy(x => x.QuestionId)
+            .Select(x => (int?)x.QuestionId)
+            .FirstOrDefaultAsync(ct);
+
+        var relatedQuery = _context.QuizQuestions
+            .AsNoTracking()
+            .Where(x => x.Active && x.QuestionId != id);
+
+        if (question.CategoryId.HasValue)
+        {
+            relatedQuery = relatedQuery.Where(x => x.CategoryId == question.CategoryId.Value);
+        }
+        else if (question.IsCritical)
+        {
+            relatedQuery = relatedQuery.Where(x => x.IsCritical);
+        }
+
+        var relatedQuestions = await relatedQuery
+            .OrderBy(x => x.QuestionId)
+            .Take(4)
+            .Select(x => new PublicQuestionItemResponse(
+                x.QuestionId,
+                x.Content,
+                x.Score,
+                !string.IsNullOrEmpty(x.Image) && x.Image != "none",
+                x.IsCritical,
+                x.Category != null ? x.Category.Code : null,
+                x.Category != null ? x.Category.Title : null))
+            .ToListAsync(ct);
 
         var response = new PublicQuestionDetailResponse(
             question.QuestionId,
@@ -106,7 +174,11 @@ public sealed class PublicQuestionsController : ControllerBase
             inQuizzes,
             question.IsCritical,
             question.Category?.Title,
-            question.Explanation);
+            question.Explanation,
+            question.Category?.Code,
+            prevId,
+            nextId,
+            relatedQuestions);
 
         return Ok(response);
     }

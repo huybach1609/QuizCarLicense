@@ -119,9 +119,9 @@ export function PracticeTelemetryPanel({
       {/* 6-Chapter Telemetry Diagnostic Table */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between text-xs font-mono text-muted-foreground px-0.5">
-          <span className="font-bold text-foreground uppercase tracking-wider">
+          <h2 className="font-bold text-foreground uppercase tracking-wider text-xs font-mono m-0">
             {"//"} 6 CHƯƠNG LÝ THUYẾT (<AnimatedNumber value={currentPractice.totalQuestions} /> CÂU HỎI)
-          </span>
+          </h2>
           <span className="text-primary hidden sm:inline">
             CHẾ ĐỘ ÔN LUYỆN
           </span>
