@@ -2,18 +2,23 @@
 
 import type { LicenseClass } from "@/lib/api-client";
 import { Bike, Car } from "lucide-react";
+import { useSelectedLicense } from "@/stores/use-license-store";
 
 interface LicenseClassStripProps {
   licenses: LicenseClass[];
-  selectedCode: string;
-  onSelect: (code: string) => void;
+  selectedCode?: string;
+  onSelect?: (code: string) => void;
 }
 
 export function LicenseClassStrip({
   licenses,
-  selectedCode,
-  onSelect,
+  selectedCode: propSelectedCode,
+  onSelect: propOnSelect,
 }: LicenseClassStripProps) {
+  const { selectedCode: storeSelectedCode, setSelectedCode } = useSelectedLicense();
+
+  const selectedCode = propSelectedCode ?? storeSelectedCode;
+  const handleSelect = propOnSelect ?? setSelectedCode;
   return (
     <div className="flex flex-col gap-2 select-none">
       <div className="flex items-center justify-between flex-wrap gap-2 px-0.5 text-xs font-mono">
@@ -39,7 +44,7 @@ export function LicenseClassStrip({
             <button
               key={lic.code}
               type="button"
-              onClick={() => onSelect(lic.code)}
+              onClick={() => handleSelect(lic.code)}
               className={`relative flex flex-col items-center justify-between py-2 px-1 text-center transition-all duration-150 cursor-pointer border active:scale-[0.97] outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                 isSelected
                   ? "bg-primary text-primary-foreground border-primary font-bold shadow-xs"

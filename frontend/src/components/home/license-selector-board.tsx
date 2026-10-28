@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import type { LicenseClass, QuizSummary, PracticeLicenseSummary } from "@/lib/api-client";
+import { useSelectedLicense } from "@/stores/use-license-store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BookOpen, CheckCircle2, ShieldAlert } from "lucide-react";
 import { CockpitHeroConsole } from "./cockpit-hero-console";
@@ -73,7 +74,7 @@ export function LicenseSelectorBoard({
   practiceMatrix,
 }: LicenseSelectorBoardProps) {
   const licenseList = licenses.length > 0 ? licenses : FALLBACK_LICENSES;
-  const [selectedCode, setSelectedCode] = useState<string>("B");
+  const { selectedCode, setSelectedCode } = useSelectedLicense();
 
   const activeLicense = useMemo(
     () =>

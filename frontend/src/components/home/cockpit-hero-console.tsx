@@ -68,24 +68,7 @@ export function CockpitHeroConsole({
 
   return (
     <section className="border border-border bg-card/80 p-4 sm:p-6 flex flex-col gap-6 relative select-none">
-      {/* Top Console Telemetry Bar */}
-      <div className="flex items-center justify-between flex-wrap gap-2 text-[11px] font-mono text-muted-foreground border-b border-border/70 pb-3">
-        <div className="flex items-center gap-2">
-          <BarcodeStrip height={12} bars={[2, 1, 3, 2, 1, 4, 1, 2, 2, 1]} />
-          <span className="font-bold text-foreground">
-            ASSESSMENT TELEMETRY CONSOLE
-          </span>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-            <strong className="text-primary font-bold">STATUS: READY</strong>
-          </span>
-          <span className="text-muted-foreground/40">|</span>
-          <span className="tabular-nums">SYS ID: QCL-600</span>
-        </div>
-      </div>
 
       {/* Main Grid: Left Typographic Core & Right Telemetry Radar */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">

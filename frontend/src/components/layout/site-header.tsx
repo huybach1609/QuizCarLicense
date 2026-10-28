@@ -57,16 +57,6 @@ export function SiteHeader() {
           <BarcodeStrip height={12} bars={[1, 3, 1, 2, 1]} className="hidden md:block opacity-40 ml-1" />
         </div>
 
-        {/* Live System Telemetry Metrics (Lattice Header Style) */}
-        <div className="hidden lg:flex items-center gap-4 text-[11px] font-mono text-muted-foreground select-none">
-          <div className="flex items-center gap-1.5">
-            <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-            <span>FIELD: <strong className="text-foreground">ONLINE</strong></span>
-          </div>
-          <span className="opacity-30">/</span>
-          <span>SIGNAL: <strong className="text-foreground tabular-nums">600Q</strong></span>
-        </div>
-
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-1 text-xs font-medium">
           <Button

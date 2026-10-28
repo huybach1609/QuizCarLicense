@@ -50,6 +50,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITestService, TestService>();
         services.AddScoped<ITakeService, TakeService>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<IOnlinePresenceService, OnlinePresenceService>();
 
         return services;
     }

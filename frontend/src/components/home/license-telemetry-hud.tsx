@@ -30,10 +30,6 @@ export function LicenseTelemetryHud({ activeLicense }: LicenseTelemetryHudProps)
           </span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 font-mono text-[11px] text-muted-foreground">
-          <BarcodeStrip height={10} bars={[1, 2, 1, 3, 1, 2]} />
-          <span>SPEC // {activeLicense.code}-REGULATION</span>
-        </div>
       </div>
 
       {/* 4-Instrument Telemetry Cells */}

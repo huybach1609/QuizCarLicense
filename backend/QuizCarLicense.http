@@ -132,3 +132,18 @@ Authorization: Bearer {{adminToken}}
   "detail": "Bộ đề ôn luyện nâng cao gồm 35 câu hỏi",
   "questionIds": [1, 2, 3, 4, 5]
 }
+
+###############################################################################
+# 5. ONLINE PRESENCE & HEARTBEAT
+###############################################################################
+
+### 5.1 Gửi heartbeat từ client
+POST {{baseUrl}}/api/v1/presence/heartbeat
+Content-Type: {{contentType}}
+
+{
+  "clientId": "test-client-session-12345"
+}
+
+### 5.2 Lấy số lượng người dùng online hiện tại
+GET {{baseUrl}}/api/v1/presence/online

@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/routing";
 import { BarcodeStrip } from "@/components/telemetry/telemetry-primitives";
+import { OnlineBadge } from "@/components/layout/online-badge";
 
 export function SiteFooter() {
   return (
@@ -18,7 +19,7 @@ export function SiteFooter() {
             BỘ ĐỀ SÁT HẠCH
           </Link>
           <span className="opacity-30">/</span>
-          <span className="text-primary font-bold">Online: xx</span>
+          <OnlineBadge />
         </div>
       </div>
     </footer>

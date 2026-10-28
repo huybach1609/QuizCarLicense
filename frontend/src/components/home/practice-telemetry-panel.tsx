@@ -32,13 +32,7 @@ export function PracticeTelemetryPanel({
         <div className="border border-destructive/40 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 relative overflow-hidden transition-colors hover:border-destructive/60">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="size-10 border border-destructive/50 bg-destructive/10 flex items-center justify-center text-destructive shrink-0">
-                <ShieldAlert className="size-5" />
-              </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[10px] font-mono text-destructive uppercase tracking-wider font-bold">
-                  HAZARD MODULE // CRITICAL SAFETY
-                </span>
                 <h3 className="text-sm sm:text-base font-bold text-foreground font-mono">
                   Bộ Câu Hỏi Điểm Liệt (
                   <AnimatedNumber value={currentPractice.criticalCount} /> câu)
@@ -80,13 +74,7 @@ export function PracticeTelemetryPanel({
         <div className="border border-warning/40 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 relative overflow-hidden transition-colors hover:border-warning/60">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="size-10 border border-warning/50 bg-warning/10 flex items-center justify-center text-warning shrink-0">
-                <Flame className="size-5" />
-              </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[10px] font-mono text-warning uppercase tracking-wider font-bold">
-                  ANOMALY FILTER // HIGH ERROR RATE
-                </span>
                 <h3 className="text-sm sm:text-base font-bold text-foreground font-mono">
                   Câu Hỏi Hay Nhầm Lẫn (
                   <AnimatedNumber value={currentPractice.frequentMistakesCount} /> câu)
