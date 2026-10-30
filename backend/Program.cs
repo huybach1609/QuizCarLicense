@@ -29,7 +29,8 @@ using (var scope = app.Services.CreateScope())
 
 app.ConfigurePipeline(app.Environment);
 
-// Map RESTful Web API Controllers
+// Map Health Check & RESTful Web API Controllers
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();

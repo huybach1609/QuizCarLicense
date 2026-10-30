@@ -24,6 +24,7 @@ ENV ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
 ENV ASPNETCORE_URLS=http://+:6789
 
 COPY --from=publish /app/publish .
+COPY --from=build /src/Demo ./Demo
 
 EXPOSE 6789
 

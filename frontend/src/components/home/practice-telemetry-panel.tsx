@@ -58,7 +58,7 @@ export function PracticeTelemetryPanel({
               variant="destructive"
               render={
                 <Link
-                  href={`/thi-sat-hach/${criticalQuiz?.quizId ?? 0}?licenseCode=${activeLicense.code}`}
+                  href={`/thi-sat-hach/${criticalQuiz?.quizId || currentPractice.criticalQuizId || 1}?licenseCode=${activeLicense.code}`}
                 />
               }
               nativeButton={false}
@@ -103,7 +103,7 @@ export function PracticeTelemetryPanel({
               variant="secondary"
               render={
                 <Link
-                  href={`/thi-sat-hach/${frequentMistakesQuiz?.quizId ?? 0}?licenseCode=${activeLicense.code}`}
+                  href={`/thi-sat-hach/${frequentMistakesQuiz?.quizId || currentPractice.frequentMistakesQuizId || 2}?licenseCode=${activeLicense.code}`}
                 />
               }
               nativeButton={false}
@@ -189,7 +189,7 @@ export function PracticeTelemetryPanel({
                       variant="ghost"
                       render={
                         <Link
-                          href={`/thi-sat-hach/${quiz.quizId}?licenseCode=${activeLicense.code}`}
+                          href={`/thi-sat-hach/${quiz.quizId || chapterInfo?.quizId || quiz.examNumber}?licenseCode=${activeLicense.code}`}
                         />
                       }
                       nativeButton={false}

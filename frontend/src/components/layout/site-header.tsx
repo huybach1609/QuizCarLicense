@@ -49,9 +49,6 @@ export function SiteHeader() {
               <span className="font-extrabold text-xs sm:text-sm tracking-tight text-foreground group-hover:text-primary transition-colors">
                 QUIZCARLICENSE
               </span>
-              <span className="text-[9px] text-muted-foreground tracking-widest hidden sm:inline">
-                TELEMETRY OBSERVATORY
-              </span>
             </div>
           </Link>
           <BarcodeStrip height={12} bars={[1, 3, 1, 2, 1]} className="hidden md:block opacity-40 ml-1" />

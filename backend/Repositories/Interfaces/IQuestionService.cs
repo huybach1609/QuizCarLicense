@@ -6,7 +6,7 @@ namespace QuizCarLicense.Repositories.Interfaces
 {
     public interface IQuestionService
     {
-        Task<PagedResult<QuizQuestion>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken ct = default);
+        Task<PagedResult<QuizQuestion>> GetPagedAsync(int pageNumber, int pageSize, string? search = null, CancellationToken ct = default);
         Task<QuizQuestion?> GetWithAnswersAsync(int id, CancellationToken ct = default);
         Task<QuizQuestion> CreateAsync(QuizQuestionInputModel input, CancellationToken ct = default);
         Task UpdateAsync(QuizQuestionInputModel input, CancellationToken ct = default);

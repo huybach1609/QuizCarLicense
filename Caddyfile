@@ -1,6 +1,16 @@
-:8080 {
-    # Backend .NET API & Static Images
-    handle /api/* {
+{$SITE_ADDRESS::80} {
+    # Health Check
+    handle /health {
+        reverse_proxy backend:6789
+    }
+
+    # Next.js BFF Auth API Routes (Cookie authentication)
+    handle /api/auth/* {
+        reverse_proxy frontend:3000
+    }
+
+    # Backend .NET RESTful API
+    handle /api/v1/* {
         reverse_proxy backend:6789
     }
     handle /swagger* {

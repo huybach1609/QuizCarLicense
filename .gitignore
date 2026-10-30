@@ -429,3 +429,5 @@ CLAUDE.md
 AGENTS.md
 DESIGN.md
 PRODUCT.md
+test/
+Jenkinsfile

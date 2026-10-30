@@ -43,6 +43,12 @@ public sealed record UpsertQuestionRequest
     [Range(1, 10)]
     public int Score { get; init; } = 1;
 
+    public int? CategoryId { get; init; }
+
+    public bool IsCritical { get; init; }
+
+    public string? Explanation { get; init; }
+
     [Required, MinLength(2)]
     public required IReadOnlyList<AdminAnswerInputRequest> Answers { get; init; }
 }
@@ -56,4 +62,7 @@ public sealed record AdminQuestionResponse(
     int Score,
     string? Image,
     bool Active,
+    int? CategoryId,
+    bool IsCritical,
+    string? Explanation,
     IReadOnlyList<GradedAnswerOptionResponse> Answers);

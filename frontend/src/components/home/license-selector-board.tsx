@@ -86,28 +86,31 @@ export function LicenseSelectorBoard({
 
   // Thống kê ôn tập động theo Hạng GPLX được chọn
   const currentPractice = useMemo(() => {
-    if (activeLicense && practiceMatrix && practiceMatrix[activeLicense.code]) {
-      return practiceMatrix[activeLicense.code];
-    }
     const isMoto = activeLicense?.vehicleGroup === "Motorbike";
     const fb = isMoto ? MOTORBIKE_FALLBACK_PRACTICE : CAR_FALLBACK_PRACTICE;
+    const matrixData = activeLicense && practiceMatrix ? practiceMatrix[activeLicense.code] : null;
+
+    const chapters = (matrixData?.chapters && matrixData.chapters.length > 0)
+      ? matrixData.chapters
+      : Object.entries(fb.chapters).map(([examNum, info]) => ({
+          quizId: 0,
+          examNumber: Number(examNum),
+          categoryCode: `CH${examNum}`,
+          title: CHAPTER_TITLES[Number(examNum)] || `Chương ${examNum}`,
+          detail: "",
+          totalQuestions: info.totalQuestions,
+          isApplicable: info.isApplicable,
+        }));
+
     return {
       licenseCode: activeLicense?.code ?? "B",
       licenseName: activeLicense?.name ?? "Hạng B",
-      totalQuestions: fb.totalQuestions,
-      criticalQuizId: 0,
-      criticalCount: fb.criticalCount,
-      frequentMistakesQuizId: 0,
-      frequentMistakesCount: fb.frequentMistakesCount,
-      chapters: Object.entries(fb.chapters).map(([examNum, info]) => ({
-        quizId: 0,
-        examNumber: Number(examNum),
-        categoryCode: `CH${examNum}`,
-        title: "",
-        detail: "",
-        totalQuestions: info.totalQuestions,
-        isApplicable: info.isApplicable,
-      })),
+      totalQuestions: matrixData?.totalQuestions || fb.totalQuestions,
+      criticalQuizId: matrixData?.criticalQuizId || 0,
+      criticalCount: matrixData?.criticalCount ?? fb.criticalCount,
+      frequentMistakesQuizId: matrixData?.frequentMistakesQuizId || 0,
+      frequentMistakesCount: matrixData?.frequentMistakesCount ?? fb.frequentMistakesCount,
+      chapters,
     };
   }, [activeLicense, practiceMatrix]);
 
@@ -156,12 +159,12 @@ export function LicenseSelectorBoard({
       }
     }
 
-    if (currentPractice?.chapters) {
+    if (currentPractice?.chapters && currentPractice.chapters.length > 0) {
       for (const ch of currentPractice.chapters) {
         if (!map.has(ch.examNumber)) {
           map.set(ch.examNumber, {
             quizId: ch.quizId,
-            title: ch.title || `Chương ${ch.examNumber}`,
+            title: ch.title || CHAPTER_TITLES[ch.examNumber] || `Chương ${ch.examNumber}`,
             detail: ch.detail || "",
             totalQuestions: ch.totalQuestions,
             updatedAt: null,
@@ -173,8 +176,25 @@ export function LicenseSelectorBoard({
       }
     }
 
+    if (map.size === 0) {
+      const isMoto = activeLicense?.vehicleGroup === "Motorbike";
+      const fb = isMoto ? MOTORBIKE_FALLBACK_PRACTICE : CAR_FALLBACK_PRACTICE;
+      for (let i = 1; i <= 6; i++) {
+        map.set(i, {
+          quizId: 0,
+          title: CHAPTER_TITLES[i] || `Chương ${i}`,
+          detail: `Ôn tập câu hỏi Chương ${i}`,
+          totalQuestions: fb.chapters[i]?.totalQuestions ?? 0,
+          updatedAt: null,
+          quizType: "ChapterPractice",
+          examNumber: i,
+          isPracticeMode: true,
+        });
+      }
+    }
+
     return Array.from(map.values()).sort((a, b) => (a.examNumber ?? 99) - (b.examNumber ?? 99));
-  }, [quizzes, currentPractice]);
+  }, [quizzes, currentPractice, activeLicense]);
 
   return (
     <div className="flex flex-col gap-6 w-full">

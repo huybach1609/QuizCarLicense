@@ -24,16 +24,17 @@ public sealed class AdminQuestionsController : ControllerBase
     }
 
     /// <summary>
-    /// Lấy danh sách câu hỏi sát hạch có phân trang.
+    /// Lấy danh sách câu hỏi sát hạch có phân trang và tìm kiếm.
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<AdminQuestionResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResponse<AdminQuestionResponse>>> GetPaged(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
         CancellationToken ct = default)
     {
-        var paged = await _questionService.GetPagedAsync(page, pageSize, ct);
+        var paged = await _questionService.GetPagedAsync(page, pageSize, search, ct);
 
         var list = paged.Data.Select(q => new AdminQuestionResponse(
             q.QuestionId,
@@ -41,6 +42,9 @@ public sealed class AdminQuestionsController : ControllerBase
             q.Score,
             q.Image,
             q.Active,
+            q.CategoryId,
+            q.IsCritical,
+            q.Explanation,
             q.QuizAnswers.Select(a => new GradedAnswerOptionResponse(a.AnswerId, a.Content, a.IsCorrect)).ToList()
         )).ToList();
 
@@ -80,6 +84,9 @@ public sealed class AdminQuestionsController : ControllerBase
             question.Score,
             question.Image,
             question.Active,
+            question.CategoryId,
+            question.IsCritical,
+            question.Explanation,
             question.QuizAnswers.Select(a => new GradedAnswerOptionResponse(a.AnswerId, a.Content, a.IsCorrect)).ToList());
 
         return Ok(response);
@@ -99,6 +106,9 @@ public sealed class AdminQuestionsController : ControllerBase
         {
             Content = request.Content,
             Score = request.Score,
+            CategoryId = request.CategoryId,
+            IsCritical = request.IsCritical,
+            Explanation = request.Explanation,
             QuizAnswers = request.Answers.Select(a => new QuizAnswerInputModel
             {
                 Content = a.Content,
@@ -114,6 +124,9 @@ public sealed class AdminQuestionsController : ControllerBase
             created.Score,
             created.Image,
             created.Active,
+            created.CategoryId,
+            created.IsCritical,
+            created.Explanation,
             created.QuizAnswers.Select(a => new GradedAnswerOptionResponse(a.AnswerId, a.Content, a.IsCorrect)).ToList());
 
         return CreatedAtAction(nameof(GetById), new { id = created.QuestionId }, response);
@@ -147,6 +160,9 @@ public sealed class AdminQuestionsController : ControllerBase
             QuestionId = id,
             Content = request.Content,
             Score = request.Score,
+            CategoryId = request.CategoryId,
+            IsCritical = request.IsCritical,
+            Explanation = request.Explanation,
             QuizAnswers = request.Answers.Select(a => new QuizAnswerInputModel
             {
                 AnswerId = a.AnswerId,

@@ -28,15 +28,29 @@ namespace QuizCarLicense.Repositories.Implementations
             return input;
         }
 
-        public async Task<PagedResult<QuizQuestion>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken ct = default)
+        public async Task<PagedResult<QuizQuestion>> GetPagedAsync(int pageNumber, int pageSize, string? search = null, CancellationToken ct = default)
         {
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
 
             var query = _db.QuizQuestions
                            .Include(q => q.QuizAnswers)
-                           .AsNoTracking()
-                           .OrderByDescending(q => q.QuestionId);
+                           .AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var trimmed = search.Trim().TrimStart('#');
+                if (int.TryParse(trimmed, out var qId))
+                {
+                    query = query.Where(q => q.QuestionId == qId);
+                }
+                else
+                {
+                    query = query.Where(q => EF.Functions.ILike(q.Content, $"%{search.Trim()}%"));
+                }
+            }
+
+            query = query.OrderBy(q => q.QuestionId);
 
             var total = await query.CountAsync(ct);
             var data = await query.Skip((pageNumber - 1) * pageSize)
@@ -65,6 +79,9 @@ namespace QuizCarLicense.Repositories.Implementations
             {
                 Content = input.Content,
                 Score = input.Score,
+                CategoryId = input.CategoryId,
+                IsCritical = input.IsCritical,
+                Explanation = input.Explanation,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 Active = true,
@@ -99,6 +116,9 @@ namespace QuizCarLicense.Repositories.Implementations
 
             entity.Content = input.Content;
             entity.Score = input.Score;
+            entity.CategoryId = input.CategoryId;
+            entity.IsCritical = input.IsCritical;
+            entity.Explanation = input.Explanation;
             entity.UpdatedAt = DateTime.UtcNow;
 
             foreach (var ans in input.QuizAnswers)

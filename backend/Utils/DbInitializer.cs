@@ -43,6 +43,18 @@ public static class DbInitializer
             seedCats = JsonSerializer.Deserialize<List<SeedCategoryDto>>(catJson, jsonOpts) ?? [];
         }
 
+        if (seedCats.Count == 0)
+        {
+            seedCats = [
+                new() { Code = "CH1_RULES", Title = "Chương I: Quy định chung và quy tắc giao thông đường bộ", Description = "Các quy tắc, khái niệm, tốc độ, khoảng cách và quy định an toàn khi tham gia giao thông (Câu 1 - 180)", DisplayOrder = 1 },
+                new() { Code = "CH2_CULTURE", Title = "Chương II: Văn hóa giao thông, đạo đức người lái xe, PCCC & cứu hộ", Description = "Đạo đức người lái xe, văn hóa ứng xử, kỹ năng phòng cháy chữa cháy và sơ cấp cứu tai nạn (Câu 181 - 205)", DisplayOrder = 2 },
+                new() { Code = "CH3_TECHNIQUE", Title = "Chương III: Kỹ thuật lái xe", Description = "Thao tác lái xe an toàn trên các điều kiện địa hình, thời tiết và xử lý tình huống khẩn cấp (Câu 206 - 263)", DisplayOrder = 3 },
+                new() { Code = "CH4_STRUCTURE", Title = "Chương IV: Cấu tạo và sửa chữa", Description = "Cấu tạo cơ bản của xe ô tô, kiểm tra bảo dưỡng và khắc phục sự cố kỹ thuật thông thường (Câu 264 - 300)", DisplayOrder = 4 },
+                new() { Code = "CH5_SIGNS", Title = "Chương V: Báo hiệu đường bộ", Description = "Hệ thống biển báo cấm, biển nguy hiểm, biển hiệu lệnh, biển chỉ dẫn, biển phụ và vạch kẻ đường (Câu 301 - 485)", DisplayOrder = 5 },
+                new() { Code = "CH6_SAHINH", Title = "Chương VI: Giải thế sa hình và kỹ năng xử lý tình huống", Description = "Quy tắc nhường đường tại nơi giao nhau và các tình huống giao thông thực tế (Câu 486 - 600)", DisplayOrder = 6 }
+            ];
+        }
+
         if (seedCats.Count > 0)
         {
             var existingCats = await context.QuestionCategories.ToListAsync();
@@ -86,6 +98,7 @@ public static class DbInitializer
 
             await context.SaveChangesAsync();
         }
+
 
         var categoryMap = await context.QuestionCategories.ToDictionaryAsync(c => c.Code, c => c.CategoryId);
 
@@ -133,6 +146,7 @@ public static class DbInitializer
 
             await context.SaveChangesAsync();
         }
+
 
         var licenseMap = await context.LicenseClasses.Include(l => l.AllowedQuestions).ToDictionaryAsync(l => l.Code, l => l);
 
@@ -243,6 +257,40 @@ public static class DbInitializer
 
             await context.SaveChangesAsync();
         }
+        else if (existingQuestions.Count > 0)
+        {
+            var criticalSet = DiemLietIds.ToHashSet();
+            bool modified = false;
+
+            foreach (var eq in existingQuestions)
+            {
+                if (!eq.CategoryId.HasValue)
+                {
+                    eq.CategoryId = eq.QuestionId switch
+                    {
+                        <= 180 => categoryMap.GetValueOrDefault("CH1_RULES"),
+                        <= 205 => categoryMap.GetValueOrDefault("CH2_CULTURE"),
+                        <= 263 => categoryMap.GetValueOrDefault("CH3_TECHNIQUE"),
+                        <= 300 => categoryMap.GetValueOrDefault("CH4_STRUCTURE"),
+                        <= 485 => categoryMap.GetValueOrDefault("CH5_SIGNS"),
+                        _ => categoryMap.GetValueOrDefault("CH6_SAHINH")
+                    };
+                    modified = true;
+                }
+
+                if (!eq.IsCritical && criticalSet.Contains(eq.QuestionId))
+                {
+                    eq.IsCritical = true;
+                    modified = true;
+                }
+            }
+
+            if (modified)
+            {
+                await context.SaveChangesAsync();
+            }
+        }
+
 
         // Tải lại allQuestions sau khi lưu
         var allQuestions = await context.QuizQuestions
@@ -284,9 +332,28 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
-        // 5. Khởi tạo Bộ Đề Đặc Biệt & Bộ Đề Ôn Tập Theo 6 Chương
-        var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Role == UserRole.Admin.ToString());
 
+        // 5. Khởi tạo / Đảm bảo có tài khoản Quản trị viên (Admin)
+        var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Role == UserRole.Admin.ToString());
+        if (adminUser == null)
+        {
+            var adminUsername = Environment.GetEnvironmentVariable("ADMIN_DEFAULT_USERNAME") ?? "admin";
+            var adminPassword = Environment.GetEnvironmentVariable("ADMIN_DEFAULT_PASSWORD") ?? "Admin@123456";
+            var adminFullName = Environment.GetEnvironmentVariable("ADMIN_DEFAULT_FULLNAME") ?? "Quản trị viên";
+
+            adminUser = new User
+            {
+                Username = adminUsername,
+                FullName = adminFullName,
+                Role = UserRole.Admin.ToString()
+            };
+            adminUser.Password = PasswordHelper.HashPassword(adminUser, adminPassword);
+            context.Users.Add(adminUser);
+            await context.SaveChangesAsync();
+        }
+
+
+        // Khởi tạo Bộ Đề Đặc Biệt & Bộ Đề Ôn Tập Theo 6 Chương
         var quizDiemLiet = await context.Quizzes.Include(q => q.Questions).FirstOrDefaultAsync(q => q.Title == "Ôn tập câu điểm liệt");
         var criticalQuestions = allQuestions.Where(q => q.IsCritical).ToList();
         if (quizDiemLiet == null)
@@ -350,13 +417,13 @@ public static class DbInitializer
             .Include(q => q.Questions)
             .ToListAsync();
 
-        var keptChapterQuizIds = new HashSet<int>();
+        var chapterQuizzesToKeep = new List<Quiz>();
 
         foreach (var cat in categoriesList)
         {
             var catQuestions = allQuestions.Where(q => q.CategoryId == cat.CategoryId).ToList();
             var existingCh = allChapterQuizzes
-                .Where(q => q.CategoryId == cat.CategoryId || (q.ExamNumber == cat.DisplayOrder && !keptChapterQuizIds.Contains(q.QuizId)))
+                .Where(q => q.CategoryId == cat.CategoryId || (q.ExamNumber == cat.DisplayOrder && !chapterQuizzesToKeep.Any(k => k.QuizId == q.QuizId && q.QuizId != 0)))
                 .OrderBy(q => q.QuizId)
                 .FirstOrDefault();
 
@@ -377,6 +444,7 @@ public static class DbInitializer
                     Questions = catQuestions
                 };
                 context.Quizzes.Add(newQuiz);
+                chapterQuizzesToKeep.Add(newQuiz);
             }
             else
             {
@@ -386,11 +454,13 @@ public static class DbInitializer
                 existingCh.ExamNumber = cat.DisplayOrder;
                 existingCh.PassScore = catQuestions.Count;
                 existingCh.Questions = catQuestions;
-                keptChapterQuizIds.Add(existingCh.QuizId);
+                chapterQuizzesToKeep.Add(existingCh);
             }
         }
 
         await context.SaveChangesAsync();
+
+        var keptChapterQuizIds = chapterQuizzesToKeep.Select(q => q.QuizId).ToHashSet();
 
         // Xóa triệt để TẤT CẢ các đề ôn tập chương thừa, đề mồ côi (CategoryId null) hoặc Chương 7 cũ
         var obsoleteQuizzes = await context.Quizzes
@@ -402,6 +472,7 @@ public static class DbInitializer
             context.Quizzes.RemoveRange(obsoleteQuizzes);
             await context.SaveChangesAsync();
         }
+
 
         // 6. Khởi tạo / Đồng bộ Bộ đề Cố định từ exam_presets.json & Đề Ngẫu Nhiên cho 11 Hạng
         var presetFilePath = FindDemoFile("exam_presets.json");
