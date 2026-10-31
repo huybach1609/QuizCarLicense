@@ -17,7 +17,10 @@
     "errorOccurred": "An error occurred. Please try again.",
     "backHome": "Back to Home",
     "page": "Page",
-    "total": "Total"
+    "total": "Total",
+    "questionBank": "600 QUESTIONS BANK",
+    "examSets": "MOCK EXAM SETS",
+    "onlineUsers": "Active online users"
   },
   "Home": {
     "heroTitle": "Official Driver's License Theory Practice",

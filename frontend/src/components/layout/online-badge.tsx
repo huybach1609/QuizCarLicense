@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AnimatedNumber } from "@/components/telemetry/telemetry-primitives";
 
 interface OnlinePresenceDto {
@@ -32,7 +33,13 @@ function getOrCreateClientId(): string {
   }
 }
 
-export function OnlineBadge() {
+interface OnlineBadgeProps {
+  className?: string;
+  variant?: "default" | "inverted";
+}
+
+export function OnlineBadge({ className = "", variant = "default" }: OnlineBadgeProps) {
+  const t = useTranslations("Common");
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -102,13 +109,25 @@ export function OnlineBadge() {
     };
   }, []);
 
+  const isInverted = variant === "inverted";
+
   return (
     <span
-      className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-wider select-none text-muted-foreground"
-      title="Số người dùng đang trực tuyến"
+      className={`inline-flex items-center gap-1.5 font-mono text-[11px] tracking-wider select-none ${
+        isInverted
+          ? "text-emerald-950/80 dark:text-emerald-100/80"
+          : "text-muted-foreground"
+      } ${className}`}
+      title={t("onlineUsers")}
     >
       <span className="opacity-70">ONLINE:</span>
-      <span className="text-primary font-bold tabular-nums">
+      <span
+        className={`font-bold tabular-nums ${
+          isInverted
+            ? "text-emerald-700 dark:text-emerald-400"
+            : "text-primary"
+        }`}
+      >
         {onlineCount !== null ? (
           <AnimatedNumber value={onlineCount} duration={200} />
         ) : (
